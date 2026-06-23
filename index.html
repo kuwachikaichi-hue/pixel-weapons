@@ -1,0 +1,1369 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>ドット武器メーカー PRO</title>
+<style>
+:root{
+  --bg:#0b1020;--panel:#121a2d;--panel2:#18233b;--line:#2b3556;
+  --text:#ecf3ff;--muted:#aab4d6;--accent:#7dd3fc;--accent2:#c084fc;
+  --good:#86efac;--warn:#fbbf24;--bad:#fb7185;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:linear-gradient(180deg,#090d18,#060810);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+button,input,select{font:inherit}
+.hidden{display:none !important}
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100dvh}
+.topbar,.bottombar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 12px;background:rgba(8,10,18,.92);border-bottom:1px solid var(--line)
+}
+.bottombar{border-top:1px solid var(--line);border-bottom:none}
+.badge{
+  padding:3px 8px;border-radius:999px;background:rgba(125,211,252,.12);
+  border:1px solid rgba(125,211,252,.22);font-size:12px
+}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.tabbtn,.toolbtn,.smallbtn{
+  border:1px solid var(--line);background:var(--panel);color:var(--text);
+  border-radius:10px;padding:9px 11px;cursor:pointer;min-height:40px
+}
+.tabbtn.active,.toolbtn.active,.smallbtn.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(125,211,252,.15) inset}
+.grid{
+  display:grid;grid-template-columns:300px 1fr 360px;min-height:0
+}
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+  border-right:1px solid var(--line);min-height:0;overflow:auto
+}
+.panel.right{border-right:none;border-left:1px solid var(--line)}
+.section{padding:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.section h3{margin:0 0 10px;font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stack{display:grid;gap:8px}
+input[type="text"],input[type="number"],select{
+  width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--text)
+}
+input[type="color"]{width:42px;height:40px;border:none;background:none;padding:0}
+#palette{display:flex;gap:6px;flex-wrap:wrap}
+.pal{
+  width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.16);
+  cursor:pointer
+}
+.canvasWrap{display:grid;grid-template-rows:auto 1fr auto;min-height:0}
+.canvasTop{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;
+  border-bottom:1px solid var(--line);background:rgba(8,10,18,.26)
+}
+.work{
+  display:grid;place-items:center;min-height:0;position:relative;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(125,211,252,.08), transparent 30%),
+    linear-gradient(180deg,#0b1020,#080b13)
+}
+#view{
+  width:min(80vmin,720px);height:min(80vmin,720px);
+  border:1px solid var(--line);background:#101725;
+  image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none
+}
+.itemList{display:grid;gap:8px}
+.item{
+  display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
+  padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer
+}
+.item.active{border-color:var(--accent)}
+.thumb{
+  width:44px;height:44px;border:1px solid var(--line);background:#0f1523;image-rendering:pixelated
+}
+.hint{color:var(--muted);font-size:12px;line-height:1.5}
+.status{color:var(--muted);font-size:12px}
+.sep{height:1px;background:rgba(255,255,255,.07);margin:10px 0}
+@media (max-width: 900px){
+  html,body{overflow:auto}
+  .grid{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .panel,.panel.right{border-left:none;border-right:none;border-top:1px solid var(--line)}
+  .canvasWrap{min-height:70dvh}
+  #view{width:min(96vw,680px);height:min(96vw,680px)}
+  .tabs{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <strong>ドット武器メーカー PRO</strong>
+    <span class="badge" id="projectBadge">Untitled</span>
+    <span class="badge" id="sizeBadge">32×32</span>
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="draw">描く</button>
+      <button class="tabbtn" data-tab="history">履歴</button>
+      <button class="tabbtn" data-tab="animate">アニメ</button>
+      <button class="tabbtn" data-tab="template">テンプレ</button>
+      <button class="tabbtn" data-tab="export">出力</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <aside class="panel" id="leftPanel">
+      <div class="section">
+        <h3>武器情報</h3>
+        <div class="stack">
+          <input id="nameInput" type="text" placeholder="武器名" />
+          <div class="row">
+            <select id="attrInput">
+              <option>火</option><option>風</option><option>土</option><option>水</option><option>光</option><option>闇</option>
+            </select>
+            <select id="rarityInput">
+              <option>N</option><option>R</option><option>SR</option><option>SSR</option><option>UR</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="smallbtn" id="randomNameBtn">ランダム名</button>
+            <button class="smallbtn" id="saveProjectBtn">保存</button>
+            <button class="smallbtn" id="newProjectBtn">新規</button>
+          </div>
+          <div class="hint">名前・属性・レア度・サイズ・フレーム・レイヤーをまとめて保存します。</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>キャンバス設定</h3>
+        <div class="row">
+          <select id="sizeInput">
+            <option value="8">8×8</option><option value="16">16×16</option><option value="24">24×24</option>
+            <option value="32" selected>32×32</option><option value="64">64×64</option><option value="128">128×128</option>
+          </select>
+          <button class="smallbtn" id="applySizeBtn">適用</button>
+        </div>
+        <div class="row">
+          <label class="status">ブラシ</label><input id="brushInput" type="number" min="1" max="16" value="1" style="width:80px" />
+          <label class="status">不透明度</label><input id="opacityInput" type="number" min="0" max="1" step="0.05" value="1" style="width:80px" />
+        </div>
+        <div class="row">
+          <label class="status">アニメ速度(ms)</label><input id="animSpeedInput" type="number" min="20" max="3000" value="120" style="width:100px" />
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>ツール</h3>
+        <div class="row" id="toolRow">
+          <button class="toolbtn active" data-tool="pen">ペン</button>
+          <button class="toolbtn" data-tool="erase">消しゴム</button>
+          <button class="toolbtn" data-tool="eraseColor">透過消し</button>
+          <button class="toolbtn" data-tool="fill">塗りつぶし</button>
+          <button class="toolbtn" data-tool="pick">スポイト</button>
+          <button class="toolbtn" data-tool="stampRect">四角</button>
+          <button class="toolbtn" data-tool="stampCircle">丸</button>
+          <button class="toolbtn" data-tool="stampLine">線</button>
+          <button class="toolbtn" data-tool="lasso">投げ縄</button>
+        </div>
+        <div class="sep"></div>
+        <div class="row">
+          <input id="colorInput" type="color" value="#9ee8ff" />
+          <button class="smallbtn" id="addColorBtn">色追加</button>
+          <button class="smallbtn" id="clearPaletteBtn">初期化</button>
+        </div>
+        <div id="palette"></div>
+      </div>
+
+      <div class="section">
+        <h3>描画補助</h3>
+        <div class="row">
+          <button class="smallbtn" id="gridBtn">グリッド</button>
+          <button class="smallbtn" id="mirrorXBtn">左右対称</button>
+          <button class="smallbtn" id="mirrorYBtn">上下対称</button>
+          <button class="smallbtn" id="onionBtn">オニオン</button>
+          <button class="smallbtn" id="alphaLockBtn">アルファロック</button>
+        </div>
+        <div class="row">
+          <button class="smallbtn" id="importBtn">画像貼付</button>
+          <input id="imageInput" type="file" accept="image/*" class="hidden" />
+        </div>
+        <div class="row">
+          <label class="status">透過消し許容差</label>
+          <input id="toleranceInput" type="number" min="0" max="255" value="0" style="width:90px" />
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>レイヤー</h3>
+        <div class="row">
+          <button class="smallbtn" id="addLayerBtn">追加</button>
+          <button class="smallbtn" id="dupLayerBtn">複製</button>
+          <button class="smallbtn" id="delLayerBtn">削除</button>
+          <button class="smallbtn" id="upLayerBtn">↑</button>
+          <button class="smallbtn" id="downLayerBtn">↓</button>
+          <button class="smallbtn" id="mergeLayerBtn">結合</button>
+        </div>
+        <div id="layerList" class="itemList"></div>
+      </div>
+
+      <div class="section">
+        <h3>選択</h3>
+        <div class="row">
+          <button class="smallbtn" id="selMoveBtn">移動</button>
+          <button class="smallbtn" id="selDupBtn">複製</button>
+          <button class="smallbtn" id="selDelBtn">削除</button>
+          <button class="smallbtn" id="selClearBtn">解除</button>
+        </div>
+        <div class="hint">投げ縄で囲った領域を編集できます。選択中は移動・複製・削除が可能です。</div>
+      </div>
+    </aside>
+
+    <main class="canvasWrap">
+      <div class="canvasTop">
+        <span class="badge" id="frameBadge">Frame 1 / 1</span>
+        <span class="badge" id="layerBadge">Layer 1 / 1</span>
+        <span class="badge" id="toolBadge">pen</span>
+        <span class="badge" id="coordBadge">x:- y:-</span>
+        <span class="badge" id="selBadge">Selection: off</span>
+        <div style="margin-left:auto" class="row">
+          <button class="smallbtn" id="playBtn">再生</button>
+          <button class="smallbtn" id="stopBtn">停止</button>
+        </div>
+      </div>
+      <div class="work">
+        <canvas id="view"></canvas>
+      </div>
+      <div class="bottombar">
+        <span class="status" id="status">準備完了</span>
+      </div>
+    </main>
+
+    <aside class="panel right" id="rightPanel">
+      <div class="section" id="historyPanel">
+        <h3>履歴</h3>
+        <div class="row">
+          <button class="smallbtn" id="loadBtn">読み込み</button>
+          <button class="smallbtn" id="deleteBtn">削除</button>
+        </div>
+        <div id="historyList" class="itemList"></div>
+      </div>
+
+      <div class="section hidden" id="animatePanel">
+        <h3>フレーム</h3>
+        <div class="row">
+          <button class="smallbtn" id="addFrameBtn">追加</button>
+          <button class="smallbtn" id="dupFrameBtn">複製</button>
+          <button class="smallbtn" id="delFrameBtn">削除</button>
+          <button class="smallbtn" id="prevFrameBtn">←</button>
+          <button class="smallbtn" id="nextFrameBtn">→</button>
+        </div>
+        <div id="frameList" class="itemList"></div>
+      </div>
+
+      <div class="section hidden" id="templatePanel">
+        <h3>テンプレ</h3>
+        <div class="row">
+          <button class="smallbtn" id="saveTemplateBtn">現在を保存</button>
+        </div>
+        <div id="templateList" class="itemList"></div>
+      </div>
+
+      <div class="section hidden" id="exportPanel">
+        <h3>出力</h3>
+        <div class="stack">
+          <button class="smallbtn" id="pngBtn">PNG書き出し</button>
+          <button class="smallbtn" id="jsonBtn">JSON書き出し</button>
+          <button class="smallbtn" id="framesBtn">フレームPNG連番</button>
+          <button class="smallbtn" id="sheetBtn">スプライトシート</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "weapon_maker_pro_v1";
+const TEMPLATE_KEY = "weapon_maker_templates_pro_v1";
+let SIZE = 32;
+
+const view = document.getElementById("view");
+const ctx = view.getContext("2d");
+
+let ui = {
+  tab:"draw", tool:"pen", color:"#9ee8ff", palette:["#9ee8ff","#ffffff","#0f172a","#f59e0b","#ef4444","#22c55e","#8b5cf6"],
+  mirrorX:false, mirrorY:false, grid:true, onion:false, alphaLock:false, tolerance:0,
+  brush:1, opacity:1, playing:false, playTimer:0, animSpeed:120,
+  project:null, currentFrame:0, currentLayer:0, selectedHistoryId:null, selectedTemplateId:null,
+  selection:null, selectionMode:null, selectionBuffer:null, selectionAnchor:null, stampStart:null
+};
+
+function setCanvasSize(size){
+  SIZE = size;
+  view.width = SIZE * 16;
+  view.height = SIZE * 16;
+  document.getElementById("sizeBadge").textContent = `${SIZE}×${SIZE}`;
+}
+function blankPixels(){ return Array.from({length:SIZE*SIZE},()=>null); }
+function makeLayer(name){ return {id:crypto.randomUUID(), name, visible:true, opacity:1, pixels:blankPixels()}; }
+function makeFrame(name){ return {id:crypto.randomUUID(), name, duration:ui.animSpeed, layers:[makeLayer("Base"), makeLayer("FX")]}; }
+function makeProject(name="Untitled"){
+  return {id:crypto.randomUUID(), name, attribute:"火", rarity:"N", size:SIZE, frames:[makeFrame("Frame 1")], currentFrame:0, currentLayer:0, updatedAt:Date.now()};
+}
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+function loadProjects(){
+  const s = localStorage.getItem(STORAGE_KEY);
+  if(!s){
+    const initial=[makeProject("Star Blade")];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  try { return JSON.parse(s); } catch { return [makeProject("Star Blade")]; }
+}
+function saveProjects(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); }
+let projects = loadProjects();
+ui.project = projects[0];
+ui.selectedHistoryId = ui.project.id;
+ui.currentFrame = ui.project.currentFrame || 0;
+ui.currentLayer = ui.project.currentLayer || 0;
+setCanvasSize(ui.project.size || 32);
+
+function currentFrame(){ return ui.project.frames[ui.currentFrame]; }
+function currentLayer(){ return currentFrame().layers[ui.currentLayer]; }
+function setStatus(t){ document.getElementById("status").textContent=t; }
+function syncUI(){
+  document.getElementById("projectBadge").textContent = `${ui.project.name} / ${ui.project.attribute} / ${ui.project.rarity}`;
+  document.getElementById("frameBadge").textContent = `Frame ${ui.currentFrame+1} / ${ui.project.frames.length}`;
+  document.getElementById("layerBadge").textContent = `Layer ${ui.currentLayer+1} / ${currentFrame().layers.length}`;
+  document.getElementById("toolBadge").textContent = ui.tool;
+  document.getElementById("nameInput").value = ui.project.name;
+  document.getElementById("attrInput").value = ui.project.attribute;
+  document.getElementById("rarityInput").value = ui.project.rarity;
+  document.getElementById("sizeInput").value = String(SIZE);
+  document.getElementById("brushInput").value = String(ui.brush);
+  document.getElementById("opacityInput").value = String(ui.opacity);
+  document.getElementById("animSpeedInput").value = String(ui.animSpeed);
+  document.getElementById("selBadge").textContent = ui.selection ? `Selection: ${ui.selection.length}` : "Selection: off";
+}
+
+function saveProject(message=true){
+  ui.project.currentFrame = ui.currentFrame;
+  ui.project.currentLayer = ui.currentLayer;
+  ui.project.size = SIZE;
+  ui.project.updatedAt = Date.now();
+  const idx=projects.findIndex(p=>p.id===ui.project.id);
+  if(idx>=0) projects[idx]=ui.project; else projects.unshift(ui.project);
+  saveProjects();
+  renderAll();
+  if(message) setStatus("保存しました");
+}
+function loadProjectById(id){
+  const p=projects.find(v=>v.id===id);
+  if(!p) return;
+  ui.project=clone(p);
+  setCanvasSize(ui.project.size || 32);
+  ui.currentFrame=ui.project.currentFrame || 0;
+  ui.currentLayer=ui.project.currentLayer || 0;
+  ui.selection = null;
+  syncUI(); renderAll(); setStatus("読み込みました");
+}
+function parseCssColor(c){
+  if(!c) return null;
+  if(c.startsWith("#")) return hexToRgba(c);
+  const m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
+  if(!m) return null;
+  return {r:+m[1], g:+m[2], b:+m[3], a:Math.round((m[4]===undefined?1:+m[4])*255)};
+}
+function rgbaToCss(p){ return `rgba(${p.r},${p.g},${p.b},${p.a/255})`; }
+function hexToRgba(hex){
+  const h=hex.replace("#","");
+  return {r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16), a:255};
+}
+function sameColor(a,b,tol=0){
+  const pa=parseCssColor(a), pb=parseCssColor(b);
+  if(!pa||!pb) return false;
+  return Math.abs(pa.r-pb.r)+Math.abs(pa.g-pb.g)+Math.abs(pa.b-pb.b)+Math.abs(pa.a-pb.a) <= tol;
+}
+function inBounds(x,y){ return x>=0&&y>=0&&x<SIZE&&y<SIZE; }
+function idx(x,y){ return y*SIZE+x; }
+function setPixel(layer,x,y,color){
+  if(!inBounds(x,y)) return;
+  layer.pixels[idx(x,y)] = color;
+}
+function getPixel(layer,x,y){
+  if(!inBounds(x,y)) return null;
+  return layer.pixels[idx(x,y)];
+}
+function clearPixel(layer,x,y){
+  if(!inBounds(x,y)) return;
+  layer.pixels[idx(x,y)] = null;
+}
+function floodFill(layer,x,y,target,replacement){
+  if(target===replacement) return;
+  const q=[[x,y]];
+  while(q.length){
+    const [cx,cy]=q.pop();
+    if(!inBounds(cx,cy)) continue;
+    const i=idx(cx,cy);
+    if(layer.pixels[i]!==target) continue;
+    layer.pixels[i]=replacement;
+    q.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+}
+function eraseSameColor(layer,color,tol){
+  for(let i=0;i<layer.pixels.length;i++) if(layer.pixels[i] && sameColor(layer.pixels[i], color, tol)) layer.pixels[i]=null;
+}
+function cellFromEvent(ev){
+  const rect=view.getBoundingClientRect();
+  const x=Math.floor((ev.clientX-rect.left)/rect.width*SIZE);
+  const y=Math.floor((ev.clientY-rect.top)/rect.height*SIZE);
+  if(!inBounds(x,y)) return null;
+  return {x,y};
+}
+function shapeCells(type,x,y,size){
+  const out=[];
+  const r=Math.max(0,Math.floor(size/2));
+  if(type==="stampRect"){
+    for(let yy=-r; yy<=r; yy++) for(let xx=-r; xx<=r; xx++) out.push([x+xx,y+yy]);
+  }else if(type==="stampCircle"){
+    for(let yy=-r; yy<=r; yy++) for(let xx=-r; xx<=r; xx++) if(xx*xx+yy*yy<=r*r) out.push([x+xx,y+yy]);
+  }else if(type==="stampLine"){
+    for(let i=0;i<size;i++) out.push([x-r+i, y-r+i]);
+  }
+  return out;
+}
+
+function selectionContains(x,y){
+  if(!ui.selection) return false;
+  return ui.selection.some(p=>p[0]===x && p[1]===y);
+}
+function captureSelection(frame){
+  if(!ui.selection) return null;
+  const layers = frame.layers.map(l=>({ ...l, pixels: l.pixels.slice() }));
+  return { layers, points: ui.selection.map(p=>[p[0],p[1]]) };
+}
+function pasteSelection(frame, buffer, dx, dy){
+  if(!buffer) return;
+  const map = new Map(buffer.points.map(([x,y])=>[`$${x},${y}`, true]));
+  for(const layer of frame.layers){
+    for(const [x,y] of buffer.points){
+      const nx=x+dx, ny=y+dy;
+      if(!inBounds(nx,ny)) continue;
+      const c = layer.pixels[idx(x,y)];
+      if(c) layer.pixels[idx(nx,ny)] = c;
+      if(map.has(`$${x},${y}`)) layer.pixels[idx(x,y)] = null;
+    }
+  }
+}
+function clearSelectionArea(frame){
+  if(!ui.selection) return;
+  for(const layer of frame.layers){
+    for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
+  }
+}
+function drawFrame(frame, alpha=1, targetCtx=ctx){
+  if(!frame) return;
+  for(const layer of frame.layers){
+    if(!layer.visible) continue;
+    targetCtx.globalAlpha = alpha * layer.opacity;
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const c = layer.pixels[idx(x,y)];
+      if(!c) continue;
+      targetCtx.fillStyle = c;
+      targetCtx.fillRect(x*16,y*16,16,16);
+    }
+  }
+  targetCtx.globalAlpha = 1;
+}
+function drawSelectionOverlay(){
+  if(!ui.selection) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(125,211,252,.22)";
+  for(const [x,y] of ui.selection) ctx.fillRect(x*16,y*16,16,16);
+  ctx.strokeStyle = "rgba(255,255,255,.9)";
+  ctx.lineWidth = 1;
+  for(const [x,y] of ui.selection) ctx.strokeRect(x*16+.5,y*16+.5,15,15);
+  ctx.restore();
+}
+function renderCanvas(){
+  ctx.clearRect(0,0,view.width,view.height);
+  ctx.imageSmoothingEnabled = false;
+  if(ui.onion && ui.project.frames.length>1){
+    drawFrame(ui.project.frames[ui.currentFrame-1],0.18);
+    drawFrame(ui.project.frames[ui.currentFrame+1],0.18);
+  }
+  drawFrame(currentFrame(),1);
+  if(ui.grid){
+    ctx.strokeStyle="rgba(255,255,255,.08)";
+    ctx.lineWidth=1;
+    for(let i=0;i<=SIZE;i++){
+      ctx.beginPath(); ctx.moveTo(i*16+.5,0); ctx.lineTo(i*16+.5,view.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,i*16+.5); ctx.lineTo(view.width,i*16+.5); ctx.stroke();
+    }
+  }
+  drawSelectionOverlay();
+}
+function renderPalette(){
+  const wrap=document.getElementById("palette");
+  wrap.innerHTML="";
+  ui.palette.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="pal"; b.style.background=c; b.title=c;
+    if(ui.color===c) b.style.outline="2px solid #7dd3fc";
+    b.onclick=()=>{ ui.color=c; document.getElementById("colorInput").value=c; renderAll(); };
+    wrap.appendChild(b);
+  });
+}
+function renderLayerList(){
+  const wrap=document.getElementById("layerList");
+  wrap.innerHTML="";
+  currentFrame().layers.forEach((l,i)=>{
+    const row=document.createElement("div");
+    row.className="item"+(i===ui.currentLayer?" active":"");
+    const th=document.createElement("canvas");
+    th.width=32; th.height=32; th.className="thumb";
+    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){ const c=l.pixels[idx(x,y)]; if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); } }
+    const mid=document.createElement("div");
+    mid.innerHTML=`<div>${l.name}</div><div class="hint">${Math.round(l.opacity*100)}% ${l.visible?"表示":"非表示"}</div>`;
+    const vis=document.createElement("button");
+    vis.className="smallbtn"; vis.textContent=l.visible?"👁":"×";
+    vis.onclick=e=>{ e.stopPropagation(); l.visible=!l.visible; saveProject(false); };
+    row.onclick=()=>{ ui.currentLayer=i; renderAll(); };
+    row.appendChild(th); row.appendChild(mid); row.appendChild(vis);
+    wrap.appendChild(row);
+  });
+}
+function renderFrameList(){
+  const wrap=document.getElementById("frameList"); if(!wrap) return;
+  wrap.innerHTML="";
+  ui.project.frames.forEach((f,i)=>{
+    const row=document.createElement("div");
+    row.className="item"+(i===ui.currentFrame?" active":"");
+    const th=document.createElement("canvas");
+    th.width=32; th.height=32; th.className="thumb";
+    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
+    for(const layer of f.layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const c=layer.pixels[idx(x,y)];
+      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
+    }
+    const mid=document.createElement("div");
+    mid.innerHTML=`<div>${f.name}</div><div class="hint">${f.duration}ms</div>`;
+    const btn=document.createElement("button");
+    btn.className="smallbtn"; btn.textContent="選択";
+    btn.onclick=e=>{ e.stopPropagation(); ui.currentFrame=i; ui.currentLayer=0; renderAll(); };
+    row.onclick=()=>{ ui.currentFrame=i; ui.currentLayer=0; renderAll(); };
+    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
+    wrap.appendChild(row);
+  });
+}
+function renderHistory(){
+  const wrap=document.getElementById("historyList");
+  wrap.innerHTML="";
+  projects.forEach(p=>{
+    const row=document.createElement("div");
+    row.className="item"+(p.id===ui.selectedHistoryId?" active":"");
+    const th=document.createElement("canvas");
+    th.width=32; th.height=32; th.className="thumb";
+    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
+    if(p.frames[0]) for(const layer of p.frames[0].layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const c=layer.pixels[idx(x,y)];
+      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
+    }
+    const mid=document.createElement("div");
+    mid.innerHTML=`<div>${p.name}</div><div class="hint">${p.attribute} / ${p.rarity} / ${p.size}×${p.size}</div>`;
+    const btn=document.createElement("button");
+    btn.className="smallbtn"; btn.textContent="開く";
+    btn.onclick=e=>{ e.stopPropagation(); loadProjectById(p.id); };
+    row.onclick=()=>{ ui.selectedHistoryId=p.id; renderHistory(); };
+    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
+    wrap.appendChild(row);
+  });
+}
+function renderTemplateList(){
+  const wrap=document.getElementById("templateList");
+  if(!wrap) return;
+  const list=JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
+  wrap.innerHTML="";
+  list.forEach(t=>{
+    const row=document.createElement("div");
+    row.className="item"+(t.id===ui.selectedTemplateId?" active":"");
+    const th=document.createElement("canvas");
+    th.width=32; th.height=32; th.className="thumb";
+    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
+    if(t.frames[0]) for(const layer of t.frames[0].layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const c=layer.pixels[idx(x,y)];
+      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
+    }
+    const mid=document.createElement("div");
+    mid.innerHTML=`<div>${t.name}</div><div class="hint">${t.attribute} / ${t.rarity}</div>`;
+    const btn=document.createElement("button");
+    btn.className="smallbtn"; btn.textContent="適用";
+    btn.onclick=e=>{ e.stopPropagation(); ui.selectedTemplateId=t.id; ui.project.frames=clone(t.frames); ui.currentFrame=0; ui.currentLayer=0; setCanvasSize(t.size || SIZE); renderAll(); saveProject(); };
+    row.onclick=()=>{ ui.selectedTemplateId=t.id; renderTemplateList(); };
+    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
+    wrap.appendChild(row);
+  });
+}
+function renderAll(){
+  syncUI();
+  renderPalette();
+  renderLayerList();
+  renderFrameList();
+  renderHistory();
+  renderTemplateList();
+  renderCanvas();
+}
+
+function randomWeaponName(){
+  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
+  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
+  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
+}
+
+function ensureSelection(points){
+  ui.selection = points;
+  ui.selectionBuffer = null;
+  ui.selectionMode = null;
+  ui.selectionAnchor = null;
+  syncUI();
+}
+function clearSelection(){ ui.selection=null; ui.selectionBuffer=null; ui.selectionMode=null; ui.selectionAnchor=null; syncUI(); renderAll(); }
+
+function paintAt(x,y){
+  const layer = currentLayer();
+  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+  const cells = [];
+  const half = Math.floor(ui.brush/2);
+  for(let yy=-half; yy<=half; yy++) for(let xx=-half; xx<=half; xx++) cells.push([x+xx,y+yy]);
+  const handleCell = (cx,cy)=>{
+    if(!inBounds(cx,cy)) return;
+    if(ui.selection && ui.selectionMode!=="move" && !selectionContains(cx,cy)) return;
+    if(ui.tool==="pen"){
+      if(ui.alphaLock && !getPixel(layer,cx,cy)) return;
+      setPixel(layer,cx,cy,color);
+    }else if(ui.tool==="erase"){
+      clearPixel(layer,cx,cy);
+    }else if(ui.tool==="eraseColor"){
+      const c=getPixel(layer,cx,cy);
+      if(c) eraseSameColor(layer,c,ui.tolerance);
+    }else if(ui.tool==="fill"){
+      const target=getPixel(layer,cx,cy);
+      floodFill(layer,cx,cy,target,color);
+    }else if(ui.tool==="pick"){
+      const c=getPixel(layer,cx,cy);
+      if(c){ ui.color=c; document.getElementById("colorInput").value=c; }
+    }else if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
+      // handled on pointer up
+    }else if(ui.tool==="lasso"){
+      // handled separately
+    }
+    if(ui.mirrorX) handleMirrorX(cx,cy,color);
+    if(ui.mirrorY) handleMirrorY(cx,cy,color);
+  };
+  cells.forEach(([cx,cy])=>handleCell(cx,cy));
+  renderAll();
+}
+function handleMirrorX(x,y,color){
+  const mx = SIZE-1-x;
+  if(ui.tool==="erase") clearPixel(currentLayer(),mx,y);
+  else if(ui.tool==="eraseColor"){ const c=getPixel(currentLayer(),mx,y); if(c) eraseSameColor(currentLayer(),c,ui.tolerance); }
+  else setPixel(currentLayer(),mx,y,color);
+}
+function handleMirrorY(x,y,color){
+  const my = SIZE-1-y;
+  if(ui.tool==="erase") clearPixel(currentLayer(),x,my);
+  else if(ui.tool==="eraseColor"){ const c=getPixel(currentLayer(),x,my); if(c) eraseSameColor(currentLayer(),c,ui.tolerance); }
+  else setPixel(currentLayer(),x,my,color);
+}
+function stampAt(x,y){
+  const layer=currentLayer();
+  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+  const pts = shapeCells(ui.tool,x,y,Math.max(1,ui.brush));
+  pts.forEach(([cx,cy])=>{
+    if(!inBounds(cx,cy)) return;
+    setPixel(layer,cx,cy,color);
+    if(ui.mirrorX) setPixel(layer,SIZE-1-cx,cy,color);
+    if(ui.mirrorY) setPixel(layer,cx,SIZE-1-cy,color);
+  });
+  renderAll();
+}
+function importImage(file){
+  const img=new Image();
+  const url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const off=document.createElement("canvas");
+    off.width=SIZE; off.height=SIZE;
+    const octx=off.getContext("2d",{willReadFrequently:true});
+    octx.imageSmoothingEnabled=true;
+    octx.clearRect(0,0,SIZE,SIZE);
+    octx.drawImage(img,0,0,SIZE,SIZE);
+    const d=octx.getImageData(0,0,SIZE,SIZE).data;
+    const layer=currentLayer();
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const i=(y*SIZE+x)*4, a=d[i+3];
+      if(a<10) continue;
+      layer.pixels[idx(x,y)] = `rgba(${d[i]},${d[i+1]},${d[i+2]},${(a/255).toFixed(3)})`;
+    }
+    URL.revokeObjectURL(url);
+    renderAll(); saveProject(); setStatus("画像を貼り付けました");
+  };
+  img.src=url;
+}
+function exportPNG(frame=null, filename="weapon.png"){
+  const off=document.createElement("canvas");
+  off.width=SIZE*16; off.height=SIZE*16;
+  const octx=off.getContext("2d");
+  octx.imageSmoothingEnabled=false;
+  const f=frame || currentFrame();
+  for(const layer of f.layers){
+    if(!layer.visible) continue;
+    octx.globalAlpha=layer.opacity;
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const c=layer.pixels[idx(x,y)];
+      if(c){ octx.fillStyle=c; octx.fillRect(x*16,y*16,16,16); }
+    }
+  }
+  octx.globalAlpha=1;
+  const a=document.createElement("a");
+  a.href=off.toDataURL("image/png");
+  a.download=filename;
+  a.click();
+}
+function exportFrames(){
+  ui.project.frames.forEach((f,i)=>setTimeout(()=>exportPNG(f,`${ui.project.name||"weapon"}_frame${i+1}.png`),i*120));
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(ui.project,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${ui.project.name||"weapon"}.json`;
+  a.click();
+}
+function exportSpriteSheet(){
+  const cols = ui.project.frames.length;
+  const off=document.createElement("canvas");
+  off.width=SIZE*16*cols; off.height=SIZE*16;
+  const octx=off.getContext("2d");
+  octx.imageSmoothingEnabled=false;
+  ui.project.frames.forEach((f,i)=>{
+    octx.save(); octx.translate(i*SIZE*16,0);
+    for(const layer of f.layers){
+      if(!layer.visible) continue;
+      octx.globalAlpha=layer.opacity;
+      for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+        const c=layer.pixels[idx(x,y)];
+        if(c){ octx.fillStyle=c; octx.fillRect(x*16,y*16,16,16); }
+      }
+    }
+    octx.restore();
+  });
+  const a=document.createElement("a");
+  a.href=off.toDataURL("image/png");
+  a.download=`${ui.project.name||"weapon"}_sheet.png`;
+  a.click();
+}
+
+function addFrame(){ ui.project.frames.push(makeFrame(`Frame ${ui.project.frames.length+1}`)); ui.currentFrame=ui.project.frames.length-1; ui.currentLayer=0; renderAll(); saveProject(); }
+function dupFrame(){ const f=clone(currentFrame()); f.id=crypto.randomUUID(); f.name += " copy"; ui.project.frames.splice(ui.currentFrame+1,0,f); ui.currentFrame++; ui.currentLayer=0; renderAll(); saveProject(); }
+function delFrame(){ if(ui.project.frames.length<=1) return; ui.project.frames.splice(ui.currentFrame,1); ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); saveProject(); }
+function addLayer(){ currentFrame().layers.push(makeLayer(`Layer ${currentFrame().layers.length+1}`)); ui.currentLayer=currentFrame().layers.length-1; renderAll(); saveProject(); }
+function dupLayer(){ const l=clone(currentLayer()); l.id=crypto.randomUUID(); l.name += " copy"; currentFrame().layers.splice(ui.currentLayer+1,0,l); ui.currentLayer++; renderAll(); saveProject(); }
+function delLayer(){ if(currentFrame().layers.length<=1) return; currentFrame().layers.splice(ui.currentLayer,1); ui.currentLayer=Math.max(0,ui.currentLayer-1); renderAll(); saveProject(); }
+function moveLayer(dir){
+  const arr=currentFrame().layers, i=ui.currentLayer, j=i+dir;
+  if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  ui.currentLayer=j;
+  renderAll(); saveProject();
+}
+function mergeLayer(){
+  const arr=currentFrame().layers;
+  if(arr.length<=1) return;
+  const i=ui.currentLayer, base=arr[Math.max(0,i-1)], top=arr[i];
+  for(let p=0;p<top.pixels.length;p++) if(top.pixels[p]) base.pixels[p]=top.pixels[p];
+  arr.splice(i,1);
+  ui.currentLayer=Math.max(0,i-1);
+  renderAll(); saveProject();
+}
+function resizeProject(newSize){
+  const oldSize = SIZE;
+  const scale = newSize / oldSize;
+  ui.project.frames.forEach(f=>{
+    f.layers.forEach(l=>{
+      const old = l.pixels.slice();
+      l.pixels = Array.from({length:newSize*newSize},()=>null);
+      for(let y=0;y<newSize;y++) for(let x=0;x<newSize;x++){
+        const ox = Math.floor(x/scale), oy = Math.floor(y/scale);
+        if(ox<oldSize && oy<oldSize) l.pixels[y*newSize+x] = old[oy*oldSize+ox];
+      }
+    });
+  });
+  ui.project.size = newSize;
+  setCanvasSize(newSize);
+  renderAll(); saveProject();
+}
+function applySelectionMove(dx,dy){
+  if(!ui.selection) return;
+  const frame=currentFrame();
+  for(const layer of frame.layers){
+    const copy = layer.pixels.slice();
+    for(const [x,y] of ui.selection) if(copy[idx(x,y)]){
+      const nx=x+dx, ny=y+dy;
+      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = copy[idx(x,y)];
+      layer.pixels[idx(x,y)] = null;
+    }
+  }
+  ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
+  renderAll();
+}
+function randomSelectionFromRect(x0,y0,x1,y1){
+  const pts=[];
+  const minx=Math.max(0,Math.min(x0,x1)), maxx=Math.min(SIZE-1,Math.max(x0,x1));
+  const miny=Math.max(0,Math.min(y0,y1)), maxy=Math.min(SIZE-1,Math.max(y0,y1));
+  for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
+  return pts;
+}
+function shapeFromDrag(type,x0,y0,x1,y1){
+  const pts=[];
+  const minx=Math.min(x0,x1), maxx=Math.max(x0,x1), miny=Math.min(y0,y1), maxy=Math.max(y0,y1);
+  if(type==="stampRect"){
+    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
+  }else if(type==="stampCircle"){
+    const cx=(minx+maxx)/2, cy=(miny+maxy)/2, rx=(maxx-minx)/2, ry=(maxy-miny)/2;
+    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){
+      const dx=(x-cx)/(rx||1), dy=(y-cy)/(ry||1);
+      if(dx*dx+dy*dy<=1) pts.push([x,y]);
+    }
+  }else if(type==="stampLine"){
+    let x=x0, y=y0, dx=Math.abs(x1-x0), sx=x0<x1?1:-1, dy=-Math.abs(y1-y0), sy=y0<y1?1:-1, err=dx+dy;
+    while(true){
+      pts.push([x,y]);
+      if(x===x1 && y===y1) break;
+      const e2=2*err;
+      if(e2>=dy){ err+=dy; x+=sx; }
+      if(e2<=dx){ err+=dx; y+=sy; }
+    }
+  }
+  return pts;
+}
+
+function clearSelectionSelectionOnly(){
+  if(!ui.selection) return;
+  const frame=currentFrame();
+  for(const layer of frame.layers) for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
+}
+function pasteSelection(dx,dy){
+  if(!ui.selectionBuffer) return;
+  const frame=currentFrame();
+  for(const layer of frame.layers){
+    for(const [x,y,c] of ui.selectionBuffer){
+      const nx=x+dx, ny=y+dy;
+      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = c;
+    }
+  }
+  renderAll();
+}
+
+function startSelectionLasso(x,y){
+  ui.selection = [[x,y]];
+  ui.selectionMode = "lasso";
+  ui.selectionAnchor = {x,y};
+}
+function finishSelectionLasso(){
+  if(!ui.selection || ui.selection.length < 3) { ui.selection = null; ui.selectionMode = null; return; }
+  const pts = ui.selection.slice();
+  ui.selection = pts;
+  ui.selectionMode = null;
+  ui.selectionBuffer = null;
+  syncUI(); renderAll();
+}
+function captureSelectionBuffer(){
+  if(!ui.selection) return null;
+  const set = new Set(ui.selection.map(([x,y])=>`${x},${y}`));
+  const buf=[];
+  const frame=currentFrame();
+  for(const layer of frame.layers){
+    for(const [x,y] of ui.selection){
+      const c = layer.pixels[idx(x,y)];
+      if(c) buf.push([x,y,c]);
+    }
+  }
+  return buf;
+}
+
+let drawing=false, dragStart=null, dragEnd=null, pointerMode=null;
+view.addEventListener("contextmenu", e=>e.preventDefault());
+view.addEventListener("pointerdown", e=>{
+  const c = cellFromEvent(e); if(!c) return;
+  drawing = true;
+  dragStart = c;
+  dragEnd = c;
+  if(ui.tool==="lasso"){
+    if(!ui.selection) startSelectionLasso(c.x,c.y);
+    else if(ui.selectionMode==="move") ui.selectionAnchor = {x:c.x,y:c.y};
+  }else if(ui.selection && ui.tool==="pen"){
+    pointerMode="selectionDraw";
+    paintAt(c.x,c.y);
+  }else if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
+    pointerMode="stamp";
+  }else{
+    pointerMode="paint";
+    paintAt(c.x,c.y);
+  }
+});
+view.addEventListener("pointermove", e=>{
+  const c = cellFromEvent(e);
+  document.getElementById("coordBadge").textContent = c ? `x:${c.x} y:${c.y}` : `x:- y:-`;
+  if(!drawing || !c) return;
+  dragEnd = c;
+  if(pointerMode==="paint" || pointerMode==="selectionDraw") paintAt(c.x,c.y);
+  if(ui.tool==="lasso" && ui.selectionMode==="lasso"){
+    ui.selection = ui.selection.concat([[c.x,c.y]]);
+    renderCanvas();
+  }
+  if(ui.selectionMode==="move" && ui.selectionAnchor){
+    renderAll();
+  }
+});
+addEventListener("pointerup", ()=>{
+  if(!drawing) return;
+  const end = dragEnd || dragStart;
+  if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
+    const pts = shapeFromDrag(ui.tool, dragStart.x, dragStart.y, end.x, end.y);
+    const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+    pts.forEach(([x,y])=>{
+      if(!inBounds(x,y)) return;
+      setPixel(currentLayer(),x,y,color);
+      if(ui.mirrorX) setPixel(currentLayer(),SIZE-1-x,y,color);
+      if(ui.mirrorY) setPixel(currentLayer(),x,SIZE-1-y,color);
+    });
+    renderAll();
+  }
+  if(ui.tool==="lasso" && ui.selectionMode==="lasso") finishSelectionLasso();
+  drawing=false; pointerMode=null; dragStart=null; dragEnd=null;
+});
+
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  ui.tab=btn.dataset.tab;
+  document.getElementById("historyPanel").classList.toggle("hidden", ui.tab!=="history");
+  document.getElementById("animatePanel").classList.toggle("hidden", ui.tab!=="animate");
+  document.getElementById("templatePanel").classList.toggle("hidden", ui.tab!=="template");
+  document.getElementById("exportPanel").classList.toggle("hidden", ui.tab!=="export");
+});
+document.querySelectorAll("[data-tool]").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll("[data-tool]").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  ui.tool=btn.dataset.tool;
+  syncUI();
+});
+
+document.getElementById("nameInput").oninput = e=>ui.project.name=e.target.value;
+document.getElementById("attrInput").oninput = e=>ui.project.attribute=e.target.value;
+document.getElementById("rarityInput").oninput = e=>ui.project.rarity=e.target.value;
+document.getElementById("sizeInput").value = String(SIZE);
+document.getElementById("brushInput").oninput = e=>ui.brush = Math.max(1,Math.min(16,+e.target.value||1));
+document.getElementById("opacityInput").oninput = e=>ui.opacity = Math.max(0,Math.min(1,+(e.target.value||1)));
+document.getElementById("animSpeedInput").oninput = e=>{ ui.animSpeed = Math.max(20,Math.min(3000,+e.target.value||120)); currentFrame().duration = ui.animSpeed; };
+document.getElementById("colorInput").oninput = e=>ui.color=e.target.value;
+document.getElementById("toleranceInput").oninput = e=>ui.tolerance = +e.target.value || 0;
+
+document.getElementById("randomNameBtn").onclick = ()=>{ ui.project.name=randomWeaponName(); document.getElementById("nameInput").value=ui.project.name; };
+document.getElementById("saveProjectBtn").onclick = ()=>saveProject(true);
+document.getElementById("newProjectBtn").onclick = ()=>{
+  ui.project=makeProject();
+  ui.currentFrame=0; ui.currentLayer=0; ui.selection=null;
+  projects.unshift(ui.project); saveProjects(); renderAll(); setStatus("新規作成");
+};
+document.getElementById("applySizeBtn").onclick = ()=>resizeProject(+document.getElementById("sizeInput").value);
+document.getElementById("addColorBtn").onclick = ()=>{ if(!ui.palette.includes(ui.color)) ui.palette.unshift(ui.color); renderAll(); };
+document.getElementById("clearPaletteBtn").onclick = ()=>{ ui.palette=["#9ee8ff","#ffffff","#0f172a","#f59e0b","#ef4444","#22c55e","#8b5cf6"]; renderAll(); };
+
+document.getElementById("gridBtn").onclick = ()=>{ ui.grid=!ui.grid; document.getElementById("gridBtn").classList.toggle("active",ui.grid); };
+document.getElementById("mirrorXBtn").onclick = ()=>{ ui.mirrorX=!ui.mirrorX; document.getElementById("mirrorXBtn").classList.toggle("active",ui.mirrorX); };
+document.getElementById("mirrorYBtn").onclick = ()=>{ ui.mirrorY=!ui.mirrorY; document.getElementById("mirrorYBtn").classList.toggle("active",ui.mirrorY); };
+document.getElementById("onionBtn").onclick = ()=>{ ui.onion=!ui.onion; document.getElementById("onionBtn").classList.toggle("active",ui.onion); };
+document.getElementById("alphaLockBtn").onclick = ()=>{ ui.alphaLock=!ui.alphaLock; document.getElementById("alphaLockBtn").classList.toggle("active",ui.alphaLock); };
+document.getElementById("importBtn").onclick = ()=>document.getElementById("imageInput").click();
+document.getElementById("imageInput").onchange = e=>{ if(e.target.files[0]) importImage(e.target.files[0]); };
+
+document.getElementById("loadBtn").onclick = ()=>loadProjectById(ui.selectedHistoryId || ui.project.id);
+document.getElementById("deleteBtn").onclick = ()=>{
+  if(projects.length<=1) return;
+  const id=ui.selectedHistoryId || ui.project.id;
+  projects = projects.filter(p=>p.id!==id);
+  saveProjects();
+  ui.project = projects[0]; ui.currentFrame=0; ui.currentLayer=0; ui.selectedHistoryId = ui.project.id;
+  setCanvasSize(ui.project.size || 32); renderAll();
+};
+document.getElementById("saveTemplateBtn").onclick = ()=>{
+  const list = JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
+  const t = {id:crypto.randomUUID(), name:ui.project.name+" template", attribute:ui.project.attribute, rarity:ui.project.rarity, size:SIZE, frames:clone(ui.project.frames)};
+  list.unshift(t);
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(list));
+  renderTemplateList();
+  setStatus("テンプレ保存");
+};
+
+document.getElementById("pngBtn").onclick = ()=>exportPNG(null, `${ui.project.name||"weapon"}.png`);
+document.getElementById("jsonBtn").onclick = ()=>exportJSON();
+document.getElementById("framesBtn").onclick = ()=>exportFrames();
+document.getElementById("sheetBtn").onclick = ()=>exportSpriteSheet();
+
+document.getElementById("addFrameBtn").onclick = ()=>addFrame();
+document.getElementById("dupFrameBtn").onclick = ()=>dupFrame();
+document.getElementById("delFrameBtn").onclick = ()=>delFrame();
+document.getElementById("prevFrameBtn").onclick = ()=>{ ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); };
+document.getElementById("nextFrameBtn").onclick = ()=>{ ui.currentFrame=Math.min(ui.project.frames.length-1,ui.currentFrame+1); ui.currentLayer=0; renderAll(); };
+
+document.getElementById("addLayerBtn").onclick = ()=>addLayer();
+document.getElementById("dupLayerBtn").onclick = ()=>dupLayer();
+document.getElementById("delLayerBtn").onclick = ()=>delLayer();
+document.getElementById("upLayerBtn").onclick = ()=>moveLayer(-1);
+document.getElementById("downLayerBtn").onclick = ()=>moveLayer(1);
+document.getElementById("mergeLayerBtn").onclick = ()=>mergeLayer();
+
+document.getElementById("playBtn").onclick = ()=>{ ui.playing=true; setStatus("再生中"); };
+document.getElementById("stopBtn").onclick = ()=>{ ui.playing=false; setStatus("停止"); };
+
+document.getElementById("selClearBtn").onclick = ()=>clearSelection();
+document.getElementById("selDelBtn").onclick = ()=>{ clearSelectionSelectionOnly(); clearSelection(); saveProject(); };
+document.getElementById("selDupBtn").onclick = ()=>{ ui.selectionBuffer = captureSelectionBuffer(); ui.selectionMode="copy"; setStatus("選択複製モード"); };
+document.getElementById("selMoveBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="move"; ui.selectionBuffer = captureSelectionBuffer(); setStatus("選択移動モード"); } };
+
+function randomName(){
+  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
+  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
+  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
+}
+document.getElementById("randomNameBtn").onclick = ()=>{ ui.project.name=randomName(); document.getElementById("nameInput").value=ui.project.name; };
+
+function syncUI(){
+  document.getElementById("projectBadge").textContent = `${ui.project.name} / ${ui.project.attribute} / ${ui.project.rarity}`;
+  document.getElementById("frameBadge").textContent = `Frame ${ui.currentFrame+1} / ${ui.project.frames.length}`;
+  document.getElementById("layerBadge").textContent = `Layer ${ui.currentLayer+1} / ${currentFrame().layers.length}`;
+  document.getElementById("toolBadge").textContent = ui.tool;
+  document.getElementById("nameInput").value = ui.project.name;
+  document.getElementById("attrInput").value = ui.project.attribute;
+  document.getElementById("rarityInput").value = ui.project.rarity;
+  document.getElementById("sizeInput").value = String(SIZE);
+  document.getElementById("brushInput").value = String(ui.brush);
+  document.getElementById("opacityInput").value = String(ui.opacity);
+  document.getElementById("animSpeedInput").value = String(ui.animSpeed);
+  document.getElementById("selBadge").textContent = ui.selection ? `Selection: ${ui.selection.length}` : "Selection: off";
+  document.getElementById("sizeBadge").textContent = `${SIZE}×${SIZE}`;
+}
+function renderAll(){
+  syncUI();
+  renderPalette();
+  renderLayerList();
+  renderFrameList();
+  renderHistory();
+  renderTemplateList();
+  renderCanvas();
+}
+
+let selectionDrawStart = null;
+view.addEventListener("pointerdown", e=>{
+  const c = cellFromEvent(e); if(!c) return;
+  if(ui.tool==="lasso"){
+    if(!ui.selection || ui.selectionMode!=="lasso"){
+      ui.selection = [[c.x,c.y]];
+      ui.selectionMode = "lasso";
+      selectionDrawStart = c;
+      renderCanvas();
+    }
+    return;
+  }
+  if(ui.selection && ui.selectionMode==="move"){
+    ui.selectionAnchor = {x:c.x,y:c.y};
+    return;
+  }
+  if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
+    dragStart = c; drawing = true; return;
+  }
+  drawing = true;
+  paintAt(c.x,c.y);
+});
+view.addEventListener("pointermove", e=>{
+  const c = cellFromEvent(e);
+  document.getElementById("coordBadge").textContent = c ? `x:${c.x} y:${c.y}` : `x:- y:-`;
+  if(!c) return;
+  if(ui.tool==="lasso" && ui.selectionMode==="lasso" && drawing){
+    ui.selection.push([c.x,c.y]);
+    renderCanvas();
+    return;
+  }
+  if(ui.selectionMode==="move" && ui.selectionAnchor && drawing){
+    const dx = c.x - ui.selectionAnchor.x;
+    const dy = c.y - ui.selectionAnchor.y;
+    ui.selectionAnchor = {x:c.x,y:c.y};
+    pasteSelection(dx,dy);
+    ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
+    renderCanvas();
+    return;
+  }
+  if(!drawing) return;
+  if(ui.tool==="pen" || ui.tool==="erase" || ui.tool==="eraseColor" || ui.tool==="fill" || ui.tool==="pick") paintAt(c.x,c.y);
+});
+addEventListener("pointerup", ()=>{
+  if(ui.tool==="lasso" && ui.selectionMode==="lasso"){
+    ui.selectionMode = null;
+    ui.selectionBuffer = captureSelectionBuffer();
+    syncUI(); renderCanvas(); setStatus("選択完了");
+  }
+  if(drawing && (ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine") && dragStart){
+    const end = dragEnd || dragStart;
+    const pts = shapeFromDrag(ui.tool, dragStart.x, dragStart.y, end.x, end.y);
+    const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+    pts.forEach(([x,y])=>{
+      if(!inBounds(x,y)) return;
+      setPixel(currentLayer(),x,y,color);
+      if(ui.mirrorX) setPixel(currentLayer(),SIZE-1-x,y,color);
+      if(ui.mirrorY) setPixel(currentLayer(),x,SIZE-1-y,color);
+    });
+    renderAll();
+  }
+  drawing=false; dragStart=null; dragEnd=null;
+});
+view.addEventListener("contextmenu", e=>e.preventDefault());
+
+function paintAt(x,y){
+  const layer = currentLayer();
+  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+  const cells=[];
+  const half = Math.floor(ui.brush/2);
+  for(let yy=-half; yy<=half; yy++) for(let xx=-half; xx<=half; xx++) cells.push([x+xx,y+yy]);
+  cells.forEach(([cx,cy])=>{
+    if(!inBounds(cx,cy)) return;
+    if(ui.tool!=="pick" && ui.selection && ui.selectionMode!=="move" && !selectionContains(cx,cy) && ui.tool!=="lasso") return;
+    if(ui.tool==="pen"){
+      if(ui.alphaLock && !getPixel(layer,cx,cy)) return;
+      setPixel(layer,cx,cy,color);
+    }else if(ui.tool==="erase"){
+      clearPixel(layer,cx,cy);
+    }else if(ui.tool==="eraseColor"){
+      const c=getPixel(layer,cx,cy); if(c) eraseSameColor(layer,c,ui.tolerance);
+    }else if(ui.tool==="fill"){
+      const target=getPixel(layer,cx,cy); floodFill(layer,cx,cy,target,color);
+    }else if(ui.tool==="pick"){
+      const c=getPixel(layer,cx,cy); if(c){ ui.color=c; document.getElementById("colorInput").value=c; }
+    }
+    if(ui.mirrorX) setPixel(layer,SIZE-1-cx,cy,color);
+    if(ui.mirrorY) setPixel(layer,cx,SIZE-1-cy,color);
+  });
+  renderAll();
+}
+
+function shapeFromDrag(type,x0,y0,x1,y1){
+  const pts=[];
+  const minx=Math.min(x0,x1), maxx=Math.max(x0,x1), miny=Math.min(y0,y1), maxy=Math.max(y0,y1);
+  if(type==="stampRect"){
+    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
+  }else if(type==="stampCircle"){
+    const cx=(minx+maxx)/2, cy=(miny+maxy)/2, rx=(maxx-minx)/2, ry=(maxy-miny)/2;
+    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){
+      const dx=(x-cx)/(rx||1), dy=(y-cy)/(ry||1);
+      if(dx*dx+dy*dy<=1) pts.push([x,y]);
+    }
+  }else if(type==="stampLine"){
+    let x=x0,y=y0,dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy;
+    while(true){
+      pts.push([x,y]);
+      if(x===x1 && y===y1) break;
+      const e2=2*err;
+      if(e2>=dy){ err+=dy; x+=sx; }
+      if(e2<=dx){ err+=dx; y+=sy; }
+    }
+  }
+  return pts;
+}
+
+function captureSelectionBuffer(){
+  if(!ui.selection) return null;
+  const buf=[];
+  const frame=currentFrame();
+  for(const layer of frame.layers){
+    for(const [x,y] of ui.selection){
+      const c = layer.pixels[idx(x,y)];
+      if(c) buf.push([x,y,c]);
+    }
+  }
+  return buf;
+}
+function clearSelectionSelectionOnly(){
+  if(!ui.selection) return;
+  for(const layer of currentFrame().layers) for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
+}
+function clearSelection(){ ui.selection=null; ui.selectionBuffer=null; ui.selectionMode=null; ui.selectionAnchor=null; renderAll(); }
+
+function pasteSelectionByBuffer(dx,dy,buffer){
+  if(!buffer) return;
+  const frame=currentFrame();
+  for(const layer of frame.layers){
+    for(const [x,y,c] of buffer){
+      const nx=x+dx, ny=y+dy;
+      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = c;
+    }
+  }
+}
+
+function resizeSelectionBox(x,y){}
+
+function captureSelectionMove(dx,dy){
+  if(!ui.selection || !ui.selectionBuffer) return;
+  pasteSelectionByBuffer(dx,dy,ui.selectionBuffer);
+  ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
+}
+document.getElementById("selMoveBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="move"; ui.selectionBuffer=captureSelectionBuffer(); setStatus("選択移動中"); } };
+document.getElementById("selDupBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="copy"; ui.selectionBuffer=captureSelectionBuffer(); setStatus("選択複製中"); } };
+document.getElementById("selDelBtn").onclick = ()=>{ clearSelectionSelectionOnly(); clearSelection(); saveProject(); };
+
+function applyTemplate(t){
+  ui.project.frames = clone(t.frames);
+  ui.project.size = t.size || SIZE;
+  ui.currentFrame=0; ui.currentLayer=0; ui.selection=null;
+  setCanvasSize(ui.project.size);
+  renderAll(); saveProject(); setStatus("テンプレを適用しました");
+}
+function randomWeaponNameWithData(){
+  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
+  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
+  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
+}
+document.getElementById("saveTemplateBtn").onclick = ()=>{
+  const list = JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
+  list.unshift({id:crypto.randomUUID(), name:ui.project.name+" template", attribute:ui.project.attribute, rarity:ui.project.rarity, size:SIZE, frames:clone(ui.project.frames)});
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(list));
+  renderTemplateList(); setStatus("テンプレ保存");
+};
+
+function exportSpriteSheetSize(){
+  const off=document.createElement("canvas");
+  off.width=SIZE*16*ui.project.frames.length; off.height=SIZE*16;
+  const octx=off.getContext("2d"); octx.imageSmoothingEnabled=false;
+  ui.project.frames.forEach((f,i)=>{
+    octx.save(); octx.translate(i*SIZE*16,0);
+    drawFrame(f,1,octx);
+    octx.restore();
+  });
+  const a=document.createElement("a");
+  a.href=off.toDataURL("image/png");
+  a.download=`${ui.project.name||"weapon"}_sheet.png`;
+  a.click();
+}
+function loadSelectionOnMove(dx,dy){
+  if(!ui.selectionBuffer) return;
+  pasteSelectionByBuffer(dx,dy,ui.selectionBuffer);
+}
+
+function tickAnimation(){
+  if(ui.playing && ui.project.frames.length){
+    ui.playTimer += 16;
+    const f = currentFrame();
+    if(ui.playTimer >= (f.duration || ui.animSpeed)){
+      ui.playTimer = 0;
+      ui.currentFrame = (ui.currentFrame + 1) % ui.project.frames.length;
+      ui.currentLayer = 0;
+      renderAll();
+    }
+  }
+  renderCanvas();
+  requestAnimationFrame(tickAnimation);
+}
+
+document.getElementById("playBtn").onclick=()=>{ ui.playing=true; setStatus("再生中"); };
+document.getElementById("stopBtn").onclick=()=>{ ui.playing=false; setStatus("停止"); };
+
+document.getElementById("addFrameBtn").onclick=()=>{ ui.project.frames.push(makeFrame(`Frame ${ui.project.frames.length+1}`)); ui.currentFrame=ui.project.frames.length-1; ui.currentLayer=0; renderAll(); saveProject(); };
+document.getElementById("dupFrameBtn").onclick=()=>{ const f=clone(currentFrame()); f.id=crypto.randomUUID(); f.name += " copy"; ui.project.frames.splice(ui.currentFrame+1,0,f); ui.currentFrame++; ui.currentLayer=0; renderAll(); saveProject(); };
+document.getElementById("delFrameBtn").onclick=()=>{ if(ui.project.frames.length<=1) return; ui.project.frames.splice(ui.currentFrame,1); ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); saveProject(); };
+document.getElementById("prevFrameBtn").onclick=()=>{ ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); };
+document.getElementById("nextFrameBtn").onclick=()=>{ ui.currentFrame=Math.min(ui.project.frames.length-1, ui.currentFrame+1); ui.currentLayer=0; renderAll(); };
+
+document.getElementById("addLayerBtn").onclick=()=>{ currentFrame().layers.push(makeLayer(`Layer ${currentFrame().layers.length+1}`)); ui.currentLayer=currentFrame().layers.length-1; renderAll(); saveProject(); };
+document.getElementById("dupLayerBtn").onclick=()=>{ const l=clone(currentLayer()); l.id=crypto.randomUUID(); l.name += " copy"; currentFrame().layers.splice(ui.currentLayer+1,0,l); ui.currentLayer++; renderAll(); saveProject(); };
+document.getElementById("delLayerBtn").onclick=()=>{ if(currentFrame().layers.length<=1) return; currentFrame().layers.splice(ui.currentLayer,1); ui.currentLayer=Math.max(0,ui.currentLayer-1); renderAll(); saveProject(); };
+document.getElementById("upLayerBtn").onclick=()=>moveLayer(-1);
+document.getElementById("downLayerBtn").onclick=()=>moveLayer(1);
+document.getElementById("mergeLayerBtn").onclick=()=>mergeLayer();
+
+document.getElementById("loadBtn").onclick=()=>loadProjectById(ui.selectedHistoryId || ui.project.id);
+document.getElementById("deleteBtn").onclick=()=>{
+  if(projects.length<=1) return;
+  const id=ui.selectedHistoryId || ui.project.id;
+  projects = projects.filter(p=>p.id!==id);
+  saveProjects();
+  ui.project = projects[0]; ui.currentFrame=0; ui.currentLayer=0; ui.selectedHistoryId=ui.project.id;
+  setCanvasSize(ui.project.size || 32); renderAll();
+};
+
+document.getElementById("pngBtn").onclick=()=>exportPNG(null, `${ui.project.name||"weapon"}.png`);
+document.getElementById("jsonBtn").onclick=()=>exportJSON();
+document.getElementById("framesBtn").onclick=()=>exportFrames();
+document.getElementById("sheetBtn").onclick=()=>exportSpriteSheetSize();
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(ui.project,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`${ui.project.name||"weapon"}.json`; a.click();
+}
+function exportFrames(){
+  ui.project.frames.forEach((f,i)=>setTimeout(()=>exportPNG(f, `${ui.project.name||"weapon"}_frame${i+1}.png`), i*120));
+}
+function hexToRgbaColorStr(hex, alpha){
+  const p=hexToRgba(hex);
+  return `rgba(${p.r},${p.g},${p.b},${alpha})`;
+}
+document.getElementById("selBadge").textContent = "Selection: off";
+document.getElementById("animSpeedInput").oninput = e=>{ ui.animSpeed = Math.max(20,Math.min(3000,+e.target.value||120)); currentFrame().duration = ui.animSpeed; };
+
+document.getElementById("sizeInput").onchange = ()=>{};
+document.getElementById("sizeInput").oninput = ()=>{};
+
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  ui.tab=btn.dataset.tab;
+  document.getElementById("historyPanel").classList.toggle("hidden", ui.tab!=="history");
+  document.getElementById("animatePanel").classList.toggle("hidden", ui.tab!=="animate");
+  document.getElementById("templatePanel").classList.toggle("hidden", ui.tab!=="template");
+  document.getElementById("exportPanel").classList.toggle("hidden", ui.tab!=="export");
+});
+
+document.getElementById("sizeInput").value = String(SIZE);
+document.getElementById("applySizeBtn").onclick = ()=>resizeProject(+document.getElementById("sizeInput").value);
+
+function resizeProject(newSize){
+  const oldSize=SIZE;
+  const scale=newSize/oldSize;
+  ui.project.frames.forEach(f=>{
+    f.layers.forEach(l=>{
+      const old=l.pixels.slice();
+      l.pixels=Array.from({length:newSize*newSize},()=>null);
+      for(let y=0;y<newSize;y++) for(let x=0;x<newSize;x++){
+        const ox=Math.floor(x/scale), oy=Math.floor(y/scale);
+        if(ox<oldSize && oy<oldSize) l.pixels[y*newSize+x]=old[oy*oldSize+ox];
+      }
+    });
+  });
+  ui.project.size=newSize;
+  setCanvasSize(newSize);
+  renderAll(); saveProject();
+}
+
+function cutSelectionToBuffer(){
+  if(!ui.selection) return null;
+  const buf = captureSelectionBuffer();
+  clearSelectionSelectionOnly();
+  return buf;
+}
+document.getElementById("selDupBtn").onclick=()=>{
+  if(!ui.selection) return;
+  ui.selectionBuffer = captureSelectionBuffer();
+  const [x,y] = ui.selection[0];
+  pasteSelectionByBuffer(1,1,ui.selectionBuffer);
+  renderAll(); saveProject();
+  setStatus("選択複製");
+};
+
+renderAll();
+setStatus("準備完了");
+tickAnimation();
+</script>
+</body>
+</html>
