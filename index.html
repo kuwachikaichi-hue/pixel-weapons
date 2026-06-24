@@ -1,1369 +1,2209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>ドット武器メーカー PRO</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BLOCK BURST - 7x7ネオンパズル</title>
 <style>
-:root{
-  --bg:#0b1020;--panel:#121a2d;--panel2:#18233b;--line:#2b3556;
-  --text:#ecf3ff;--muted:#aab4d6;--accent:#7dd3fc;--accent2:#c084fc;
-  --good:#86efac;--warn:#fbbf24;--bad:#fb7185;
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:linear-gradient(180deg,#090d18,#060810);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
-button,input,select{font:inherit}
-.hidden{display:none !important}
-.app{display:grid;grid-template-rows:auto 1fr auto;height:100dvh}
-.topbar,.bottombar{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:10px 12px;background:rgba(8,10,18,.92);border-bottom:1px solid var(--line)
-}
-.bottombar{border-top:1px solid var(--line);border-bottom:none}
-.badge{
-  padding:3px 8px;border-radius:999px;background:rgba(125,211,252,.12);
-  border:1px solid rgba(125,211,252,.22);font-size:12px
-}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
-.tabbtn,.toolbtn,.smallbtn{
-  border:1px solid var(--line);background:var(--panel);color:var(--text);
-  border-radius:10px;padding:9px 11px;cursor:pointer;min-height:40px
-}
-.tabbtn.active,.toolbtn.active,.smallbtn.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(125,211,252,.15) inset}
-.grid{
-  display:grid;grid-template-columns:300px 1fr 360px;min-height:0
-}
-.panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
-  border-right:1px solid var(--line);min-height:0;overflow:auto
-}
-.panel.right{border-right:none;border-left:1px solid var(--line)}
-.section{padding:12px;border-bottom:1px solid rgba(255,255,255,.06)}
-.section h3{margin:0 0 10px;font-size:14px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.stack{display:grid;gap:8px}
-input[type="text"],input[type="number"],select{
-  width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--text)
-}
-input[type="color"]{width:42px;height:40px;border:none;background:none;padding:0}
-#palette{display:flex;gap:6px;flex-wrap:wrap}
-.pal{
-  width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.16);
-  cursor:pointer
-}
-.canvasWrap{display:grid;grid-template-rows:auto 1fr auto;min-height:0}
-.canvasTop{
-  display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;
-  border-bottom:1px solid var(--line);background:rgba(8,10,18,.26)
-}
-.work{
-  display:grid;place-items:center;min-height:0;position:relative;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(125,211,252,.08), transparent 30%),
-    linear-gradient(180deg,#0b1020,#080b13)
-}
-#view{
-  width:min(80vmin,720px);height:min(80vmin,720px);
-  border:1px solid var(--line);background:#101725;
-  image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none
-}
-.itemList{display:grid;gap:8px}
-.item{
-  display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
-  padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer
-}
-.item.active{border-color:var(--accent)}
-.thumb{
-  width:44px;height:44px;border:1px solid var(--line);background:#0f1523;image-rendering:pixelated
-}
-.hint{color:var(--muted);font-size:12px;line-height:1.5}
-.status{color:var(--muted);font-size:12px}
-.sep{height:1px;background:rgba(255,255,255,.07);margin:10px 0}
-@media (max-width: 900px){
-  html,body{overflow:auto}
-  .grid{grid-template-columns:1fr;grid-template-rows:auto auto auto}
-  .panel,.panel.right{border-left:none;border-right:none;border-top:1px solid var(--line)}
-  .canvasWrap{min-height:70dvh}
-  #view{width:min(96vw,680px);height:min(96vw,680px)}
-  .tabs{margin-left:0}
-}
+  :root{
+    /* ===== ベースカラー: 明るいネオン系、暗くしすぎない ===== */
+    --bg-deep: #1a1238;
+    --bg-mid: #241a4a;
+    --bg-panel: #2a1f54;
+    --bg-panel2: #342763;
+    --grid-bg: #190f38;
+    --cell-empty: #2e2260;
+    --cell-border: #4a3a8a;
+
+    /* 役割固定カラー */
+    --c-player: #b388ff;       /* プレイヤー系: 紫 */
+    --c-player2: #8a5cf6;
+    --c-special-a: #4cf0ff;    /* SPECIAL: シアン */
+    --c-special-b: #ff5ec4;    /* SPECIAL: ピンク */
+    --c-reward: #ffd166;       /* 報酬: 金 */
+    --c-reward2: #ffb627;
+    --c-danger: #ff4d6d;       /* 妨害/危険: 赤 */
+    --c-success: #4dffa0;      /* 完了: 緑 */
+    --c-cpu: #5ec6ff;          /* CPU: 寒色青白 */
+    --c-cpu2: #aee3ff;
+
+    --text-main: #fdfbff;
+    --text-dim: #b6a9e8;
+
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --font-display: 'Arial Black', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    --font-body: 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', sans-serif;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background: var(--bg-deep);
+    font-family: var(--font-body);
+    color: var(--text-main);
+    overflow:hidden;
+    touch-action: none;
+    user-select: none;
+  }
+
+  #app{
+    position:relative;
+    width:100%;
+    height:100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background:
+      radial-gradient(circle at 15% -5%, rgba(255,94,196,0.22), transparent 50%),
+      radial-gradient(circle at 90% 10%, rgba(76,240,255,0.18), transparent 45%),
+      radial-gradient(circle at 50% 105%, rgba(179,136,255,0.20), transparent 55%),
+      var(--bg-deep);
+    overflow:hidden;
+  }
+
+  /* ===== アンビエント発光パーティクル(常時ゆっくり浮遊) ===== */
+  .ambient-glow{
+    position:absolute;
+    border-radius:50%;
+    filter: blur(2px);
+    pointer-events:none;
+    opacity:0.5;
+    animation: ambientFloat 9s ease-in-out infinite;
+  }
+  @keyframes ambientFloat{
+    0%,100%{ transform: translateY(0) scale(1); }
+    50%{ transform: translateY(-18px) scale(1.15); }
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    display:none;
+    flex-direction:column;
+    opacity:0;
+    transition: opacity .25s ease;
+    pointer-events:none;
+  }
+  .screen.active{
+    display:flex;
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ===== 共通パーツ ===== */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 14px 16px 6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    width:42px; height:42px;
+    border-radius: 13px;
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    color: var(--text-main);
+    font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .icon-btn:active{ transform: scale(0.9); }
+
+  .coin-pill{
+    display:flex; align-items:center; gap:7px;
+    background: linear-gradient(160deg, rgba(255,209,102,0.18), rgba(255,182,39,0.08));
+    border: 1px solid rgba(255,209,102,0.45);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight:800;
+    font-size:14px;
+    color: var(--c-reward);
+    box-shadow: 0 0 14px rgba(255,209,102,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .coin-pill .coin-ico{
+    filter: drop-shadow(0 0 4px rgba(255,209,102,0.8));
+    display:inline-block;
+    animation: coinSpin 3s linear infinite;
+  }
+  @keyframes coinSpin{
+    0%,40%{ transform: rotateY(0deg); }
+    50%{ transform: rotateY(180deg); }
+    100%{ transform: rotateY(360deg); }
+  }
+
+  h1,h2,h3{ margin:0; font-family: var(--font-display); }
+  button{ font-family: var(--font-body); border:none; }
+
+  .btn{
+    position:relative;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(150deg, var(--c-player), var(--c-player2));
+    color:#fff;
+    font-weight:800;
+    font-size:16px;
+    text-align:center;
+    cursor:pointer;
+    box-shadow: 0 6px 0 #5a35b0, 0 10px 26px rgba(179,136,255,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform .08s ease, box-shadow .08s ease;
+    overflow:hidden;
+  }
+  .btn::after{
+    content:"";
+    position:absolute;
+    top:0; left:-60%;
+    width:40%; height:100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: btnSheen 3.2s ease-in-out infinite;
+  }
+  @keyframes btnSheen{
+    0%{ left:-60%; }
+    50%{ left:140%; }
+    100%{ left:140%; }
+  }
+  .btn:active{
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #5a35b0, 0 4px 12px rgba(179,136,255,0.4);
+  }
+  .btn.secondary{
+    background: linear-gradient(150deg, var(--bg-panel2), var(--bg-panel));
+    box-shadow: 0 6px 0 #15102e, 0 8px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .btn.secondary:active{ box-shadow: 0 2px 0 #15102e; }
+  .btn.gold{
+    background: linear-gradient(150deg, var(--c-reward), var(--c-reward2));
+    color:#3a2400;
+    box-shadow: 0 6px 0 #a8740f, 0 10px 26px rgba(255,209,102,0.45), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .btn.gold:active{ box-shadow: 0 2px 0 #a8740f; }
+  .btn:disabled{
+    opacity:0.4;
+    cursor:default;
+    box-shadow:none;
+    transform:none;
+  }
+  .btn::after{ pointer-events:none; }
+
+  /* ===== HOME ===== */
+  #screen-home{
+    align-items:center;
+    justify-content:flex-start;
+    padding-top: 5vh;
+    text-align:center;
+  }
+  .home-title{
+    font-size: 46px;
+    letter-spacing: 1px;
+    background: linear-gradient(120deg, var(--c-special-a), var(--c-special-b) 55%, var(--c-reward));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height:1;
+    filter: drop-shadow(0 4px 22px rgba(255,94,196,0.45));
+    animation: titleGlow 3s ease-in-out infinite;
+  }
+  @keyframes titleGlow{
+    0%,100%{ filter: drop-shadow(0 4px 18px rgba(255,94,196,0.4)); }
+    50%{ filter: drop-shadow(0 4px 30px rgba(76,240,255,0.55)); }
+  }
+  .home-sub{
+    color: var(--text-dim);
+    font-size:13px;
+    margin-top:6px;
+    letter-spacing:3px;
+    font-weight:700;
+  }
+  .home-best{
+    margin-top: 20px;
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid rgba(255,209,102,0.4);
+    border-radius: var(--radius-lg);
+    padding: 14px 32px;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    box-shadow: 0 0 24px rgba(255,209,102,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .home-best .label{ font-size:11px; color:var(--text-dim); letter-spacing:2px; font-weight:700;}
+  .home-best .value{ font-size:34px; font-weight:900; color:var(--c-reward); font-family:var(--font-display); text-shadow: 0 0 16px rgba(255,209,102,0.5);}
+
+  .home-char{
+    margin-top: 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .home-char-avatar{
+    width:88px; height:88px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--bg-panel2), var(--bg-panel));
+    border: 3px solid var(--c-player);
+    display:flex; align-items:center; justify-content:center;
+    font-size:44px;
+    box-shadow: 0 0 28px rgba(179,136,255,0.55), inset 0 2px 6px rgba(255,255,255,0.1);
+    animation: charBreathe 2.6s ease-in-out infinite;
+  }
+  @keyframes charBreathe{
+    0%,100%{ transform: translateY(0) scale(1); }
+    50%{ transform: translateY(-5px) scale(1.03); }
+  }
+  .home-char-name{ font-weight:800; font-size:14px; }
+  .home-char-trait{ font-size:11px; color:var(--text-dim); }
+
+  .home-buttons{
+    margin-top: auto;
+    width:100%;
+    padding: 0 24px 26px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .home-row{ display:flex; gap:10px; }
+  .home-row .btn{ flex:1; font-size:13px; padding:13px; }
+
+  /* ===== PLAY ===== */
+  #screen-play{ padding: 8px 14px 12px; }
+  .play-hud{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding: 4px 4px 6px;
+  }
+  .hud-block{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    min-width:76px;
+    text-align:center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .hud-block .label{ font-size:9px; color:var(--text-dim); letter-spacing:1.5px; font-weight:700;}
+  .hud-block .value{ font-size:19px; font-weight:900; font-family:var(--font-display); color:var(--text-main); }
+  .hud-block.score .value{ color: var(--c-reward); text-shadow: 0 0 10px rgba(255,209,102,0.4); }
+  .hud-center{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .hud-char-chip{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px;
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    padding: 5px 12px 5px 5px;
+    border-radius: 999px;
+    border: 1px solid var(--cell-border);
+    font-weight:700;
+  }
+  .hud-char-chip .ico{ font-size:17px; filter: drop-shadow(0 0 4px rgba(179,136,255,0.6));}
+
+  .special-gauge-wrap{
+    margin: 4px 4px 10px;
+    background: var(--grid-bg);
+    border: 1px solid var(--cell-border);
+    border-radius: 999px;
+    height: 18px;
+    position:relative;
+    overflow:hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .special-gauge-fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--c-special-b), var(--c-special-a));
+    border-radius:999px;
+    transition: width .3s ease;
+    box-shadow: 0 0 16px rgba(76,240,255,0.7);
+    position:relative;
+    overflow:hidden;
+  }
+  .special-gauge-fill::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: gaugeFlow 1.8s linear infinite;
+  }
+  @keyframes gaugeFlow{
+    0%{ background-position: 200% 0; }
+    100%{ background-position: -50% 0; }
+  }
+  .special-gauge-wrap.ready{
+    animation: gaugePulse 0.7s ease-in-out infinite;
+  }
+  @keyframes gaugePulse{
+    0%,100%{ box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 0 6px rgba(76,240,255,0.4); }
+    50%{ box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 0 26px rgba(255,94,196,0.85); }
+  }
+  .special-gauge-label{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:800; letter-spacing:1px;
+    color:#fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    z-index:2;
+  }
+
+  .board-area{
+    position:relative;
+    display:flex;
+    justify-content:center;
+    flex:1;
+    min-height: 0;
+  }
+
+  .ghost-board-wrap{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  .ghost-board-wrap.show{ display:flex; }
+  .ghost-label{
+    font-size:10px; color: var(--c-cpu); letter-spacing:2px; margin-bottom:4px; font-weight:800;
+    text-shadow: 0 0 8px rgba(94,198,255,0.6);
+  }
+  #ghostGrid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap:2px;
+    width: 168px;
+    height: 168px;
+    background: var(--grid-bg);
+    border-radius: 12px;
+    padding: 5px;
+    border: 1px solid rgba(94,198,255,0.4);
+    box-shadow: 0 0 16px rgba(94,198,255,0.15), inset 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .ghost-cell{ border-radius:3px; background: var(--cell-empty); }
+
+  #mainGrid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap:4px;
+    width: 100%;
+    max-width: 392px;
+    aspect-ratio: 1/1;
+    background: var(--grid-bg);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    border: 1px solid var(--cell-border);
+    box-shadow: inset 0 3px 18px rgba(0,0,0,0.55), 0 0 30px rgba(179,136,255,0.08);
+    margin: 0 auto;
+  }
+  .cell{
+    border-radius: 7px;
+    background: var(--cell-empty);
+    position:relative;
+    transition: background .12s ease, transform .12s ease, box-shadow .12s ease;
+  }
+  .cell.filled{
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.35), 0 0 10px var(--glow-color, transparent);
+  }
+  .cell.hint-ok{
+    background: rgba(77,255,160,0.4) !important;
+    box-shadow: 0 0 14px rgba(77,255,160,0.7), inset 0 0 8px rgba(255,255,255,0.4) !important;
+  }
+  .cell.hint-bad{
+    background: rgba(255,77,109,0.45) !important;
+    box-shadow: 0 0 14px rgba(255,77,109,0.7) !important;
+    animation: hintBadShake 0.3s ease;
+  }
+  @keyframes hintBadShake{
+    0%,100%{ transform: translateX(0); }
+    30%{ transform: translateX(-2px); }
+    60%{ transform: translateX(2px); }
+  }
+  .cell.ripple::before{
+    content:"";
+    position:absolute;
+    inset:-4px;
+    border-radius:50%;
+    border: 2px solid rgba(255,255,255,0.8);
+    animation: rippleAnim 0.5s ease-out forwards;
+  }
+  @keyframes rippleAnim{
+    0%{ transform: scale(0.3); opacity:1; }
+    100%{ transform: scale(2.2); opacity:0; }
+  }
+  .cell.pre-glow{
+    animation: preGlow 0.18s ease-in-out;
+  }
+  @keyframes preGlow{
+    0%{ filter: brightness(1); }
+    50%{ filter: brightness(2.5); }
+    100%{ filter: brightness(1); }
+  }
+  .cell.clearing{
+    animation: cellPop .42s cubic-bezier(.3,1.5,.5,1) forwards;
+    z-index: 5;
+  }
+  @keyframes cellPop{
+    0%{ transform: scale(1); filter: brightness(1);}
+    20%{ filter: brightness(3); }
+    45%{ transform: scale(1.3); filter: brightness(2.4); }
+    100%{ transform: scale(0); filter: brightness(1); }
+  }
+
+  .tray-area{
+    display:flex;
+    justify-content: space-around;
+    align-items:center;
+    gap: 10px;
+    padding: 16px 8px 8px;
+    flex-shrink:0;
+  }
+  .piece-slot{
+    width: 30%;
+    min-height: 80px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .piece-grid{
+    display:grid;
+    gap:3px;
+    cursor: grab;
+    touch-action:none;
+    animation: pieceIdle 2.4s ease-in-out infinite;
+  }
+  @keyframes pieceIdle{
+    0%,100%{ filter: brightness(1); }
+    50%{ filter: brightness(1.18); }
+  }
+  .piece-cell{
+    border-radius: 5px;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.4), 0 0 6px var(--glow-color, transparent);
+  }
+  .piece-cell.empty{ background: transparent; box-shadow:none; }
+
+  .controls-row{
+    display:flex;
+    justify-content:center;
+    gap: 14px;
+    padding: 10px 0 4px;
+    flex-shrink:0;
+  }
+  .ctrl-btn{
+    flex:1;
+    max-width:140px;
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 11px 6px;
+    text-align:center;
+    font-size:12px;
+    font-weight:800;
+    color: var(--text-main);
+    cursor:pointer;
+    transition: transform .1s ease;
+  }
+  .ctrl-btn .big{ display:block; font-size:19px; margin-bottom:2px;}
+  .ctrl-btn.special-ready{
+    background: linear-gradient(150deg, var(--c-special-b), var(--c-special-a));
+    color:#1a0a2e;
+    animation: pulseGlow 0.8s infinite ease-in-out;
+    border-color: transparent;
+  }
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 8px rgba(76,240,255,0.5); transform: scale(1); }
+    50%{ box-shadow: 0 0 26px rgba(255,94,196,0.95); transform: scale(1.04); }
+  }
+  .ctrl-btn:active{ transform: scale(0.93); }
+  .ctrl-btn:disabled{ opacity:0.35; }
+
+  /* ===== floating score / combo text ===== */
+  .float-text{
+    position:absolute;
+    font-family: var(--font-display);
+    font-weight:900;
+    pointer-events:none;
+    z-index:50;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 16px currentColor;
+    animation: floatUp 1s ease-out forwards;
+  }
+  @keyframes floatUp{
+    0%{ opacity:0; transform: translateY(0) scale(0.5); }
+    15%{ opacity:1; transform: translateY(-8px) scale(1.2); }
+    100%{ opacity:0; transform: translateY(-75px) scale(1); }
+  }
+  .combo-banner{
+    position:absolute;
+    top: 36%;
+    left:50%;
+    transform: translate(-50%,-50%) scale(0.5);
+    font-family: var(--font-display);
+    font-weight:900;
+    color: var(--c-reward);
+    text-shadow: 0 0 10px rgba(255,209,102,0.9), 0 4px 12px rgba(0,0,0,0.6);
+    pointer-events:none;
+    z-index:60;
+    opacity:0;
+    white-space:nowrap;
+  }
+  .combo-banner.show{ animation: comboPop 0.8s cubic-bezier(.2,1.7,.4,1) forwards; }
+  @keyframes comboPop{
+    0%{ opacity:0; transform: translate(-50%,-50%) scale(0.3) rotate(-8deg); }
+    28%{ opacity:1; transform: translate(-50%,-50%) scale(1.3) rotate(3deg); }
+    55%{ transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    100%{ opacity:0; transform: translate(-50%,-50%) scale(1) translateY(-36px); }
+  }
+
+  .special-burst-ring{
+    position:absolute;
+    top:50%; left:50%;
+    width:20px; height:20px;
+    border-radius:50%;
+    border: 4px solid var(--c-special-a);
+    transform: translate(-50%,-50%);
+    pointer-events:none;
+    z-index:70;
+    opacity:0;
+  }
+  .special-burst-ring.go{
+    animation: burstRing 0.8s cubic-bezier(.2,.8,.4,1) forwards;
+  }
+  @keyframes burstRing{
+    0%{ width:20px; height:20px; opacity:1; border-width:6px; }
+    100%{ width:480px; height:480px; opacity:0; border-width:1px; }
+  }
+
+  .shake{ animation: shakeAnim 0.45s ease; }
+  @keyframes shakeAnim{
+    0%,100%{ transform: translateX(0); }
+    18%{ transform: translateX(-7px) rotate(-0.6deg); }
+    36%{ transform: translateX(6px) rotate(0.6deg); }
+    54%{ transform: translateX(-5px); }
+    72%{ transform: translateX(4px); }
+    88%{ transform: translateX(-2px); }
+  }
+  .shake-big{ animation: shakeBigAnim 0.6s ease; }
+  @keyframes shakeBigAnim{
+    0%,100%{ transform: translateX(0) translateY(0); }
+    15%{ transform: translateX(-10px) translateY(2px) rotate(-1deg); }
+    30%{ transform: translateX(9px) translateY(-2px) rotate(1deg); }
+    45%{ transform: translateX(-7px) rotate(-0.6deg); }
+    60%{ transform: translateX(6px); }
+    75%{ transform: translateX(-4px); }
+    90%{ transform: translateX(2px); }
+  }
+
+  .flash-overlay{
+    position:absolute; inset:0;
+    background: white;
+    opacity:0;
+    pointer-events:none;
+    z-index:80;
+    mix-blend-mode: screen;
+  }
+  .flash-overlay.go{ animation: flashAnim 0.4s ease; }
+  .flash-overlay.go.big{ animation: flashAnimBig 0.55s ease; }
+  @keyframes flashAnim{
+    0%{ opacity:0; } 22%{ opacity:0.55; } 100%{ opacity:0; }
+  }
+  @keyframes flashAnimBig{
+    0%{ opacity:0; } 18%{ opacity:0.85; } 100%{ opacity:0; }
+  }
+  .flash-overlay.special-self{ background: radial-gradient(circle, var(--c-special-a), var(--c-special-b)); }
+  .flash-overlay.special-cpu{ background: radial-gradient(circle, var(--c-danger), #7a0d20); }
+
+  .particle{ position:absolute; border-radius:50%; pointer-events:none; z-index:55; }
+
+  /* ===== カウントアップ数値の強調 ===== */
+  .value.counting{ animation: countPulse 0.3s ease; }
+  @keyframes countPulse{
+    0%{ transform: scale(1); }
+    40%{ transform: scale(1.25); }
+    100%{ transform: scale(1); }
+  }
+
+  /* ===== SHOP / DAILY / HOWTO / CHARSELECT / RESULT / VERSUS ===== */
+  #screen-shop, #screen-daily, #screen-howto, #screen-charselect, #screen-result, #screen-versuspick{
+    padding: 0 16px 20px;
+  }
+  .panel-title{
+    font-size: 23px;
+    text-align:center;
+    margin: 4px 0 16px;
+    letter-spacing:1px;
+    background: linear-gradient(120deg, var(--c-special-a), var(--c-player));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .scroll-area{ flex:1; overflow-y:auto; -webkit-overflow-scrolling: touch; }
+
+  .skin-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 10px; }
+  .skin-card{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    position:relative;
+    overflow:hidden;
+  }
+  .skin-card.equipped{
+    border-color: var(--c-reward);
+    box-shadow: 0 0 18px rgba(255,209,102,0.4);
+  }
+  .skin-card.equipped::before{
+    content:"EQUIPPED";
+    position:absolute; top:8px; right:-26px;
+    background: var(--c-reward);
+    color:#3a2400;
+    font-size:8px;
+    font-weight:900;
+    padding:2px 28px;
+    transform: rotate(35deg);
+    letter-spacing:1px;
+  }
+  .skin-preview{
+    width:100%; height: 64px; border-radius: 8px;
+    display:grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(2,1fr);
+    gap:3px; padding:6px;
+    background: var(--grid-bg);
+  }
+  .skin-preview div{ border-radius:4px; box-shadow: 0 0 6px var(--glow-color, transparent), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .skin-name{ font-weight:800; font-size:13px; margin-top:4px; }
+  .skin-price{ font-size:12px; color: var(--c-reward); font-weight:700; }
+  .skin-btn{
+    margin-top:6px; width:100%; padding: 9px; border-radius: var(--radius-sm);
+    background: linear-gradient(150deg, var(--c-player), var(--c-player2));
+    color:#fff; font-weight:800; font-size:12px; text-align:center;
+  }
+  .skin-btn.owned{ background: var(--bg-panel2); }
+  .skin-btn.equipped-btn{ background: linear-gradient(150deg, var(--c-reward), var(--c-reward2)); color:#3a2400; }
+  .skin-btn:disabled{ opacity:0.4; }
+
+  /* ===== DAILY ===== */
+  .daily-card{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-bottom: 10px;
+    transition: all .3s ease;
+  }
+  .daily-card.done{
+    border-color: var(--c-success);
+    background: linear-gradient(160deg, rgba(77,255,160,0.12), var(--bg-panel));
+    box-shadow: 0 0 14px rgba(77,255,160,0.2);
+  }
+  .daily-check{
+    width:36px; height:36px; border-radius:50%;
+    background: var(--bg-panel2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0;
+    border: 2px solid var(--cell-border);
+    transition: all .3s ease;
+  }
+  .daily-card.done .daily-check{
+    background: var(--c-success); border-color: var(--c-success); color:#06280f;
+    box-shadow: 0 0 12px rgba(77,255,160,0.6);
+  }
+  .daily-check.pop{ animation: checkPop 0.5s cubic-bezier(.2,1.8,.4,1); }
+  @keyframes checkPop{
+    0%{ transform: scale(0.5); } 60%{ transform: scale(1.3); } 100%{ transform: scale(1); }
+  }
+  .daily-info .title{ font-weight:800; font-size:14px; }
+  .daily-info .desc{ font-size:11px; color: var(--text-dim); margin-top:2px;}
+  .daily-bonus-bar{
+    margin-top: 14px; text-align:center; color: var(--text-dim); font-size: 12px; font-weight:700;
+  }
+  .confetti-piece{
+    position:fixed; width:8px; height:8px; pointer-events:none; z-index:300;
+  }
+
+  /* ===== CHAR SELECT ===== */
+  .char-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .char-card{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 14px 10px;
+    display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+  }
+  .char-card.selected{ border-color: var(--c-special-a); box-shadow: 0 0 18px rgba(76,240,255,0.4); }
+  .char-card .ico{ font-size: 38px; filter: drop-shadow(0 0 8px rgba(179,136,255,0.4)); }
+  .char-card .name{ font-weight:800; font-size:13px; }
+  .char-card .trait{ font-size:10px; color: var(--text-dim); line-height:1.4; }
+  .char-select-btn{
+    margin-top:6px; width:100%; padding:7px; border-radius: var(--radius-sm);
+    background: var(--bg-panel2); color: var(--text-main); font-size:11px; font-weight:800;
+  }
+  .char-card.selected .char-select-btn{ background: var(--c-special-a); color: #002a30; }
+
+  /* ===== HOWTO ===== */
+  .howto-item{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 14px; margin-bottom: 10px; display:flex; gap:12px; align-items:flex-start;
+  }
+  .howto-item .ico{ font-size:24px; }
+  .howto-item .t{ font-weight:800; font-size:13px; margin-bottom:2px;}
+  .howto-item .d{ font-size:12px; color:var(--text-dim); line-height:1.5;}
+
+  /* ===== RESULT ===== */
+  #screen-result{ align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; }
+  .result-banner{
+    font-size: 32px; margin-bottom: 18px; opacity:0; transform: scale(0.6);
+  }
+  .result-banner.win{ color: var(--c-reward); text-shadow: 0 0 20px rgba(255,209,102,0.7); }
+  .result-banner.lose{ color: var(--text-dim); }
+  .result-banner.appear{ animation: resultBannerIn 0.6s cubic-bezier(.2,1.6,.4,1) forwards; }
+  @keyframes resultBannerIn{
+    0%{ opacity:0; transform: scale(0.5) rotate(-6deg); }
+    60%{ opacity:1; transform: scale(1.12) rotate(2deg); }
+    100%{ opacity:1; transform: scale(1) rotate(0deg); }
+  }
+  .result-stats{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-lg);
+    padding: 20px 30px;
+    display:flex; flex-direction:column; gap:12px;
+    min-width: 230px; margin-bottom: 24px;
+    box-shadow: 0 0 24px rgba(179,136,255,0.12);
+  }
+  .result-row{
+    display:flex; justify-content:space-between; font-size:14px;
+    opacity:0; transform: translateX(-12px);
+  }
+  .result-row.appear{ animation: resultRowIn 0.4s ease forwards; }
+  @keyframes resultRowIn{
+    0%{ opacity:0; transform: translateX(-12px); }
+    100%{ opacity:1; transform: translateX(0); }
+  }
+  .result-row .v{ font-weight:900; color: var(--c-reward); }
+  .result-row.newbest .v{ color: var(--c-success); text-shadow: 0 0 10px rgba(77,255,160,0.6); }
+  .result-newbest{
+    font-size:13px; color: var(--c-success); margin-bottom: 14px; font-weight:800;
+    opacity:0;
+    text-shadow: 0 0 10px rgba(77,255,160,0.5);
+  }
+  .result-newbest.appear{ animation: newBestIn 0.5s ease forwards; }
+  @keyframes newBestIn{
+    0%{ opacity:0; transform: scale(0.7); } 60%{ transform: scale(1.15); } 100%{ opacity:1; transform: scale(1); }
+  }
+
+  /* ===== VERSUS PICK ===== */
+  .versus-cpu-card{
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    border-radius: var(--radius-md);
+    padding: 16px; display:flex; align-items:center; gap:14px; margin-bottom:12px;
+  }
+  .versus-cpu-card .ico{ font-size:34px; filter: drop-shadow(0 0 8px rgba(94,198,255,0.5)); }
+  .versus-cpu-card .name{ font-weight:800; font-size:14px; }
+  .versus-cpu-card .desc{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .versus-cpu-card .pick-btn{
+    margin-left:auto; padding: 10px 16px; border-radius: var(--radius-sm);
+    background: linear-gradient(150deg, var(--c-danger), #b8104a);
+    color:#fff; font-weight:800; font-size:12px; flex-shrink:0;
+  }
+
+  .toast{
+    position:absolute; bottom: 24px; left:50%;
+    transform: translateX(-50%) translateY(20px);
+    background: linear-gradient(160deg, var(--bg-panel2), var(--bg-panel));
+    border: 1px solid var(--cell-border);
+    padding: 11px 20px; border-radius: 999px; font-size:13px; font-weight:700;
+    z-index:200; opacity:0; transition: all .3s ease; pointer-events:none; white-space:nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <strong>ドット武器メーカー PRO</strong>
-    <span class="badge" id="projectBadge">Untitled</span>
-    <span class="badge" id="sizeBadge">32×32</span>
-    <div class="tabs">
-      <button class="tabbtn active" data-tab="draw">描く</button>
-      <button class="tabbtn" data-tab="history">履歴</button>
-      <button class="tabbtn" data-tab="animate">アニメ</button>
-      <button class="tabbtn" data-tab="template">テンプレ</button>
-      <button class="tabbtn" data-tab="export">出力</button>
+<div id="app">
+
+  <!-- アンビエント発光(背景の生きてる感じ) -->
+  <div class="ambient-glow" style="width:140px;height:140px;left:5%;top:8%;background:radial-gradient(circle,rgba(255,94,196,0.5),transparent 70%); animation-delay:0s;"></div>
+  <div class="ambient-glow" style="width:160px;height:160px;right:0%;top:30%;background:radial-gradient(circle,rgba(76,240,255,0.4),transparent 70%); animation-delay:2s;"></div>
+  <div class="ambient-glow" style="width:130px;height:130px;left:10%;bottom:10%;background:radial-gradient(circle,rgba(179,136,255,0.45),transparent 70%); animation-delay:4s;"></div>
+
+  <!-- ===================== HOME ===================== -->
+  <div class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="howto">？</div>
+      <div class="coin-pill"><span class="coin-ico">🪙</span><span id="homeCoin">0</span></div>
+    </div>
+    <h1 class="home-title">BLOCK<br>BURST</h1>
+    <div class="home-sub">7×7 NEON PUZZLE</div>
+
+    <div class="home-best">
+      <div class="label">ベストスコア</div>
+      <div class="value" id="homeBest">0</div>
+    </div>
+
+    <div class="home-char" data-nav="charselect">
+      <div class="home-char-avatar" id="homeCharIco">🐱</div>
+      <div class="home-char-name" id="homeCharName">ニャンコ</div>
+      <div class="home-char-trait" id="homeCharTrait">タップでキャラ変更</div>
+    </div>
+
+    <div class="home-buttons">
+      <div class="btn" data-nav="play" data-mode="normal">▶ スタート</div>
+      <div class="home-row">
+        <div class="btn secondary" data-nav="versuspick">⚔ 対戦モード</div>
+        <div class="btn secondary" data-nav="daily">📅 デイリー</div>
+      </div>
+      <div class="home-row">
+        <div class="btn secondary" data-nav="shop">🛍 ショップ</div>
+        <div class="btn secondary" data-nav="charselect">😺 キャラ</div>
+      </div>
     </div>
   </div>
 
-  <div class="grid">
-    <aside class="panel" id="leftPanel">
-      <div class="section">
-        <h3>武器情報</h3>
-        <div class="stack">
-          <input id="nameInput" type="text" placeholder="武器名" />
-          <div class="row">
-            <select id="attrInput">
-              <option>火</option><option>風</option><option>土</option><option>水</option><option>光</option><option>闇</option>
-            </select>
-            <select id="rarityInput">
-              <option>N</option><option>R</option><option>SR</option><option>SSR</option><option>UR</option>
-            </select>
-          </div>
-          <div class="row">
-            <button class="smallbtn" id="randomNameBtn">ランダム名</button>
-            <button class="smallbtn" id="saveProjectBtn">保存</button>
-            <button class="smallbtn" id="newProjectBtn">新規</button>
-          </div>
-          <div class="hint">名前・属性・レア度・サイズ・フレーム・レイヤーをまとめて保存します。</div>
-        </div>
+  <!-- ===================== PLAY ===================== -->
+  <div class="screen" id="screen-play">
+    <div class="play-hud">
+      <div class="hud-block score">
+        <div class="label">SCORE</div>
+        <div class="value" id="hudScore">0</div>
       </div>
+      <div class="hud-center">
+        <div class="hud-char-chip"><span class="ico" id="hudCharIco">🐱</span><span id="hudCharName">ニャンコ</span></div>
+        <div class="icon-btn" id="btnPlayClose" style="width:30px;height:30px;font-size:13px;">✕</div>
+      </div>
+      <div class="hud-block">
+        <div class="label">BEST</div>
+        <div class="value" id="hudBest">0</div>
+      </div>
+    </div>
 
-      <div class="section">
-        <h3>キャンバス設定</h3>
-        <div class="row">
-          <select id="sizeInput">
-            <option value="8">8×8</option><option value="16">16×16</option><option value="24">24×24</option>
-            <option value="32" selected>32×32</option><option value="64">64×64</option><option value="128">128×128</option>
-          </select>
-          <button class="smallbtn" id="applySizeBtn">適用</button>
-        </div>
-        <div class="row">
-          <label class="status">ブラシ</label><input id="brushInput" type="number" min="1" max="16" value="1" style="width:80px" />
-          <label class="status">不透明度</label><input id="opacityInput" type="number" min="0" max="1" step="0.05" value="1" style="width:80px" />
-        </div>
-        <div class="row">
-          <label class="status">アニメ速度(ms)</label><input id="animSpeedInput" type="number" min="20" max="3000" value="120" style="width:100px" />
-        </div>
-      </div>
+    <div class="special-gauge-wrap" id="specialGaugeWrap">
+      <div class="special-gauge-fill" id="specialFill"></div>
+      <div class="special-gauge-label" id="specialLabel">SPECIAL 0%</div>
+    </div>
 
-      <div class="section">
-        <h3>ツール</h3>
-        <div class="row" id="toolRow">
-          <button class="toolbtn active" data-tool="pen">ペン</button>
-          <button class="toolbtn" data-tool="erase">消しゴム</button>
-          <button class="toolbtn" data-tool="eraseColor">透過消し</button>
-          <button class="toolbtn" data-tool="fill">塗りつぶし</button>
-          <button class="toolbtn" data-tool="pick">スポイト</button>
-          <button class="toolbtn" data-tool="stampRect">四角</button>
-          <button class="toolbtn" data-tool="stampCircle">丸</button>
-          <button class="toolbtn" data-tool="stampLine">線</button>
-          <button class="toolbtn" data-tool="lasso">投げ縄</button>
-        </div>
-        <div class="sep"></div>
-        <div class="row">
-          <input id="colorInput" type="color" value="#9ee8ff" />
-          <button class="smallbtn" id="addColorBtn">色追加</button>
-          <button class="smallbtn" id="clearPaletteBtn">初期化</button>
-        </div>
-        <div id="palette"></div>
-      </div>
+    <div class="ghost-board-wrap" id="ghostWrap">
+      <div class="ghost-label" id="ghostScoreLabel">CPU: 0</div>
+      <div id="ghostGrid"></div>
+    </div>
 
-      <div class="section">
-        <h3>描画補助</h3>
-        <div class="row">
-          <button class="smallbtn" id="gridBtn">グリッド</button>
-          <button class="smallbtn" id="mirrorXBtn">左右対称</button>
-          <button class="smallbtn" id="mirrorYBtn">上下対称</button>
-          <button class="smallbtn" id="onionBtn">オニオン</button>
-          <button class="smallbtn" id="alphaLockBtn">アルファロック</button>
-        </div>
-        <div class="row">
-          <button class="smallbtn" id="importBtn">画像貼付</button>
-          <input id="imageInput" type="file" accept="image/*" class="hidden" />
-        </div>
-        <div class="row">
-          <label class="status">透過消し許容差</label>
-          <input id="toleranceInput" type="number" min="0" max="255" value="0" style="width:90px" />
-        </div>
-      </div>
+    <div class="board-area" id="boardArea">
+      <div id="mainGrid"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+      <div class="special-burst-ring" id="burstRing"></div>
+      <div class="combo-banner" id="comboBanner"></div>
+    </div>
 
-      <div class="section">
-        <h3>レイヤー</h3>
-        <div class="row">
-          <button class="smallbtn" id="addLayerBtn">追加</button>
-          <button class="smallbtn" id="dupLayerBtn">複製</button>
-          <button class="smallbtn" id="delLayerBtn">削除</button>
-          <button class="smallbtn" id="upLayerBtn">↑</button>
-          <button class="smallbtn" id="downLayerBtn">↓</button>
-          <button class="smallbtn" id="mergeLayerBtn">結合</button>
-        </div>
-        <div id="layerList" class="itemList"></div>
-      </div>
+    <div class="tray-area" id="trayArea">
+      <div class="piece-slot" data-slot="0"><div class="piece-grid" id="pieceGrid0"></div></div>
+      <div class="piece-slot" data-slot="1"><div class="piece-grid" id="pieceGrid1"></div></div>
+      <div class="piece-slot" data-slot="2"><div class="piece-grid" id="pieceGrid2"></div></div>
+    </div>
 
-      <div class="section">
-        <h3>選択</h3>
-        <div class="row">
-          <button class="smallbtn" id="selMoveBtn">移動</button>
-          <button class="smallbtn" id="selDupBtn">複製</button>
-          <button class="smallbtn" id="selDelBtn">削除</button>
-          <button class="smallbtn" id="selClearBtn">解除</button>
-        </div>
-        <div class="hint">投げ縄で囲った領域を編集できます。選択中は移動・複製・削除が可能です。</div>
-      </div>
-    </aside>
-
-    <main class="canvasWrap">
-      <div class="canvasTop">
-        <span class="badge" id="frameBadge">Frame 1 / 1</span>
-        <span class="badge" id="layerBadge">Layer 1 / 1</span>
-        <span class="badge" id="toolBadge">pen</span>
-        <span class="badge" id="coordBadge">x:- y:-</span>
-        <span class="badge" id="selBadge">Selection: off</span>
-        <div style="margin-left:auto" class="row">
-          <button class="smallbtn" id="playBtn">再生</button>
-          <button class="smallbtn" id="stopBtn">停止</button>
-        </div>
-      </div>
-      <div class="work">
-        <canvas id="view"></canvas>
-      </div>
-      <div class="bottombar">
-        <span class="status" id="status">準備完了</span>
-      </div>
-    </main>
-
-    <aside class="panel right" id="rightPanel">
-      <div class="section" id="historyPanel">
-        <h3>履歴</h3>
-        <div class="row">
-          <button class="smallbtn" id="loadBtn">読み込み</button>
-          <button class="smallbtn" id="deleteBtn">削除</button>
-        </div>
-        <div id="historyList" class="itemList"></div>
-      </div>
-
-      <div class="section hidden" id="animatePanel">
-        <h3>フレーム</h3>
-        <div class="row">
-          <button class="smallbtn" id="addFrameBtn">追加</button>
-          <button class="smallbtn" id="dupFrameBtn">複製</button>
-          <button class="smallbtn" id="delFrameBtn">削除</button>
-          <button class="smallbtn" id="prevFrameBtn">←</button>
-          <button class="smallbtn" id="nextFrameBtn">→</button>
-        </div>
-        <div id="frameList" class="itemList"></div>
-      </div>
-
-      <div class="section hidden" id="templatePanel">
-        <h3>テンプレ</h3>
-        <div class="row">
-          <button class="smallbtn" id="saveTemplateBtn">現在を保存</button>
-        </div>
-        <div id="templateList" class="itemList"></div>
-      </div>
-
-      <div class="section hidden" id="exportPanel">
-        <h3>出力</h3>
-        <div class="stack">
-          <button class="smallbtn" id="pngBtn">PNG書き出し</button>
-          <button class="smallbtn" id="jsonBtn">JSON書き出し</button>
-          <button class="smallbtn" id="framesBtn">フレームPNG連番</button>
-          <button class="smallbtn" id="sheetBtn">スプライトシート</button>
-        </div>
-      </div>
-    </aside>
+    <div class="controls-row">
+      <div class="ctrl-btn" id="btnUndo"><span class="big">↺</span>UNDO</div>
+      <div class="ctrl-btn" id="btnSpecial"><span class="big">✨</span>SPECIAL</div>
+      <div class="ctrl-btn" id="btnShuffle"><span class="big">🔀</span>SHUFFLE</div>
+    </div>
   </div>
+
+  <!-- ===================== SHOP ===================== -->
+  <div class="screen" id="screen-shop">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="home">←</div>
+      <div class="coin-pill"><span class="coin-ico">🪙</span><span id="shopCoin">0</span></div>
+    </div>
+    <h2 class="panel-title">スキンショップ</h2>
+    <div class="scroll-area">
+      <div class="skin-grid" id="skinGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===================== DAILY ===================== -->
+  <div class="screen" id="screen-daily">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="home">←</div>
+      <div style="width:42px;"></div>
+    </div>
+    <h2 class="panel-title">デイリーミッション</h2>
+    <div class="scroll-area">
+      <div id="dailyList"></div>
+      <div class="daily-bonus-bar" id="dailyBonusBar"></div>
+    </div>
+  </div>
+
+  <!-- ===================== HOWTO ===================== -->
+  <div class="screen" id="screen-howto">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="home">←</div>
+      <div style="width:42px;"></div>
+    </div>
+    <h2 class="panel-title">遊び方</h2>
+    <div class="scroll-area">
+      <div class="howto-item"><div class="ico">🧩</div><div><div class="t">ピースを置く</div><div class="d">下のピースをドラッグして盤面に置きます。緑のハイライトは置ける場所、赤は置けない場所です。</div></div></div>
+      <div class="howto-item"><div class="ico">💥</div><div><div class="t">ラインを消す</div><div class="d">縦か横の1列(7マス)が全部埋まると、そのラインが消えてスコアが入ります。同時に複数列消すとボーナス！</div></div></div>
+      <div class="howto-item"><div class="ico">🔥</div><div><div class="t">コンボをつなぐ</div><div class="d">連続でラインを消すとコンボが加算され、スコア倍率が上がります。</div></div></div>
+      <div class="howto-item"><div class="ico">✨</div><div><div class="t">SPECIALを使う</div><div class="d">ゲージが満タンになるとSPECIAL発動可能。盤面の邪魔なブロックを一掃したり、対戦相手に妨害ブロックを送れます。</div></div></div>
+      <div class="howto-item"><div class="ico">⚔</div><div><div class="t">CPUと対戦</div><div class="d">対戦モードでは上にCPUの盤面が表示されます。お互いSPECIALで妨害を送り合い、先に詰んだ方が負けです。</div></div></div>
+      <div class="howto-item"><div class="ico">😺</div><div><div class="t">キャラと属性</div><div class="d">キャラごとに特殊な能力を持っています。プレイスタイルに合わせて選びましょう。</div></div></div>
+      <div class="howto-item"><div class="ico">🛍</div><div><div class="t">ショップとデイリー</div><div class="d">コインを集めてスキンを購入したり、毎日のミッションをクリアしてボーナスを獲得しましょう。</div></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== CHAR SELECT ===================== -->
+  <div class="screen" id="screen-charselect">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="home">←</div>
+      <div style="width:42px;"></div>
+    </div>
+    <h2 class="panel-title">キャラクター</h2>
+    <div class="scroll-area">
+      <div class="char-grid" id="charGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===================== VERSUS PICK ===================== -->
+  <div class="screen" id="screen-versuspick">
+    <div class="topbar">
+      <div class="icon-btn" data-nav="home">←</div>
+      <div style="width:42px;"></div>
+    </div>
+    <h2 class="panel-title">対戦相手を選ぶ</h2>
+    <div class="scroll-area" id="versusList"></div>
+  </div>
+
+  <!-- ===================== RESULT ===================== -->
+  <div class="screen" id="screen-result">
+    <div class="result-banner" id="resultBanner">GAME OVER</div>
+    <div class="result-newbest" id="resultNewbest" style="display:none;">🎉 ベストスコア更新！</div>
+    <div class="result-stats" id="resultStats">
+      <div class="result-row" data-key="score"><span>スコア</span><span class="v" id="resultScore">0</span></div>
+      <div class="result-row" data-key="combo"><span>最大コンボ</span><span class="v" id="resultCombo">0</span></div>
+      <div class="result-row" data-key="special"><span>SPECIAL使用</span><span class="v" id="resultSpecial">0</span></div>
+      <div class="result-row" data-key="coin"><span>獲得コイン</span><span class="v" id="resultCoin">+0</span></div>
+    </div>
+    <div class="home-row" style="width:80%;">
+      <div class="btn secondary" data-nav="home">ホームへ</div>
+      <div class="btn" id="btnRetry">もう一度</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 </div>
-
 <script>
-const STORAGE_KEY = "weapon_maker_pro_v1";
-const TEMPLATE_KEY = "weapon_maker_templates_pro_v1";
-let SIZE = 32;
+(function(){
+"use strict";
 
-const view = document.getElementById("view");
-const ctx = view.getContext("2d");
+/* =========================================================
+   定数・データ定義
+   ========================================================= */
+const GRID_SIZE = 7;
+const SAVE_KEY = "blockburst_save_v2";
 
-let ui = {
-  tab:"draw", tool:"pen", color:"#9ee8ff", palette:["#9ee8ff","#ffffff","#0f172a","#f59e0b","#ef4444","#22c55e","#8b5cf6"],
-  mirrorX:false, mirrorY:false, grid:true, onion:false, alphaLock:false, tolerance:0,
-  brush:1, opacity:1, playing:false, playTimer:0, animSpeed:120,
-  project:null, currentFrame:0, currentLayer:0, selectedHistoryId:null, selectedTemplateId:null,
-  selection:null, selectionMode:null, selectionBuffer:null, selectionAnchor:null, stampStart:null
-};
+const CHARACTERS = [
+  { id:"cat",    icon:"🐱", name:"ニャンコ",   attr:"clear_boost",  trait:"ライン消去時のスコアが+15%アップ" },
+  { id:"fox",    icon:"🦊", name:"コンキツネ", attr:"coin_boost",   trait:"コイン獲得量が+20%アップ" },
+  { id:"owl",    icon:"🦉", name:"フクロウ",   attr:"foresight",    trait:"次に出るピースを予知しやすくなる(運が良くなる)" },
+  { id:"panda",  icon:"🐼", name:"パンダ",     attr:"purify",       trait:"SPECIALゲージが10%多く溜まりやすい" },
+  { id:"dragon", icon:"🐲", name:"ドラゴン",   attr:"bomb",         trait:"SPECIAL発動時の爆発範囲が拡大" },
+  { id:"ninja",  icon:"🥷", name:"ニンジャ",   attr:"sniper",       trait:"対戦で妨害ブロックの精度が上がる(命中位置が的確)" },
+  { id:"robot",  icon:"🤖", name:"ロボ",       attr:"chain",        trait:"コンボ持続時間が伸びる" },
+  { id:"ghostc", icon:"👻", name:"オバケ",     attr:"undo_master",  trait:"UNDOのクールダウンが短くなる" },
+];
 
-function setCanvasSize(size){
-  SIZE = size;
-  view.width = SIZE * 16;
-  view.height = SIZE * 16;
-  document.getElementById("sizeBadge").textContent = `${SIZE}×${SIZE}`;
+// スキン: 価格が上がるほど発光の層・密度を増やす(glowLayersで強さを表現)
+const SKINS = [
+  { id:"default", name:"スタンダード", price:0,  glow:1,
+    colors:["#4cf0ff","#ff5ec4","#ffd166","#4dffa0"] },
+  { id:"sunset", name:"サンセット", price:120, glow:2,
+    colors:["#ff7b54","#ff5ec4","#ffb347","#c2185b"] },
+  { id:"ocean", name:"オーシャン", price:120, glow:2,
+    colors:["#00c2d1","#4cf0ff","#2e86de","#a0eaff"] },
+  { id:"forest", name:"フォレスト", price:150, glow:2,
+    colors:["#4dffa0","#2e8b57","#a3d977","#1f6f4e"] },
+  { id:"galaxy", name:"ギャラクシー", price:220, glow:3,
+    colors:["#b388ff","#5d2e9e","#ff5ec4","#4cf0ff"] },
+  { id:"gold", name:"ゴールド", price:300, glow:4,
+    colors:["#ffd166","#e0a020","#fff3c4","#b8860b"] },
+  { id:"candy", name:"キャンディ", price:180, glow:3,
+    colors:["#ff9ecb","#ffd6e8","#c44dff","#ff5ec4"] },
+  { id:"mono", name:"モノクローム", price:90, glow:1,
+    colors:["#e8e8e8","#9d9d9d","#5c5c5c","#cfcfcf"] },
+  { id:"neon_circuit", name:"Neon Circuit Prime", price:2000, glow:3,
+    colors:["#4cf0ff","#1a6aff","#7b2fff","#00eaff"] },
+  { id:"sakura_bloom", name:"Sakura Bloom Luxe", price:3500, glow:3,
+    colors:["#ffb7c5","#ffdde8","#f9a8c9","#ffe8d6"] },
+  { id:"gold_flash", name:"Gold Flash Royal", price:5000, glow:4,
+    colors:["#ffd166","#ff8c00","#fff0a0","#e8a000"] },
+  { id:"crystal_mist", name:"Crystal Mist", price:7000, glow:3,
+    colors:["#e8f8ff","#a8e0ff","#c8f0ff","#80ccee"] },
+  { id:"cyber_grid", name:"Cyber Grid", price:10000, glow:4,
+    colors:["#00ff88","#00ccff","#0066ff","#00ff44"] },
+  { id:"candy_neon", name:"Candy Neon", price:14000, glow:4,
+    colors:["#ff88cc","#ffee44","#ff66aa","#ffcc00"] },
+  { id:"flame_core", name:"Flame Core", price:18000, glow:4,
+    colors:["#ff2200","#ff6600","#ff9900","#cc1100"] },
+  { id:"ocean_pulse", name:"Ocean Pulse", price:23000, glow:4,
+    colors:["#0088ff","#00ccaa","#00ffdd","#0055cc"] },
+  { id:"dark_matter", name:"Dark Matter", price:29000, glow:4,
+    colors:["#110033","#330066","#220044","#6600cc"] },
+  { id:"prism_halo", name:"Prism Halo", price:36000, glow:5,
+    colors:["#ff0088","#ff8800","#00ff88","#0088ff"] },
+  { id:"violet_crown", name:"Violet Crown", price:45000, glow:5,
+    colors:["#9900ff","#cc44ff","#ffd700","#aa00ee"] },
+  { id:"aurora_drift", name:"Aurora Drift", price:56000, glow:5,
+    colors:["#4cf0ff","#00ff88","#ff5ec4","#88ffcc"] },
+  { id:"plasma_bloom", name:"Plasma Bloom", price:68000, glow:5,
+    colors:["#cc00ff","#4400ff","#ff44cc","#8800ff"] },
+  { id:"neon_cathedral", name:"Neon Cathedral", price:82000, glow:5,
+    colors:["#ffd700","#9900ff","#0044ff","#ffaa00"] },
+  { id:"legend_spectrum", name:"Legend Spectrum", price:100000, glow:6,
+    colors:["#ff0088","#ff8800","#ffff00","#00ff88","#0088ff","#8800ff"] },
+];
+
+const CPU_LIST = [
+  { id:"slime",  icon:"🟢", name:"スライム",   desc:"のんびり配置。SPECIALはあまり使わない", speed:1900, specialChance:0.25, mistake:0.35 },
+  { id:"knight", icon:"♞", name:"ナイト",     desc:"標準的な強さ。バランス型", speed:1400, specialChance:0.45, mistake:0.18 },
+  { id:"witch",  icon:"🧙", name:"ウィッチ",   desc:"SPECIALを多用する妨害型", speed:1200, specialChance:0.65, mistake:0.10 },
+  { id:"dragonb",icon:"🐉", name:"ドラゴンボス", desc:"高速・高精度。手加減なし", speed:900, specialChance:0.75, mistake:0.04 },
+];
+
+const PIECE_SHAPES = [
+  [[0,0]],
+  [[0,0],[0,1]],
+  [[0,0],[1,0]],
+  [[0,0],[0,1],[0,2]],
+  [[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[0,2],[0,3]],
+  [[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[0,1],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]],
+  [[0,0],[1,0],[2,0],[1,1]],
+  [[0,0],[0,1],[1,1],[2,1]],
+  [[0,0],[1,0],[1,1],[2,1]],
+  [[0,1],[1,0],[1,1],[2,1]],
+  [[0,0],[0,1],[0,2],[1,1]],
+  [[0,0],[1,0],[2,0],[2,1]],
+  [[0,1],[1,1],[2,0],[2,1]],
+  [[0,0],[0,1],[0,2],[1,0],[2,0]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]],
+  [[0,0],[1,0],[2,0],[3,0],[4,0]],
+  [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]],
+];
+
+const DAILY_TEMPLATES = [
+  { id:"score", desc:(n)=>`1プレイでスコア${n}点以上`, gen:()=> 800 + Math.floor(Math.random()*5)*400 },
+  { id:"combo", desc:(n)=>`コンボを${n}以上つなげる`, gen:()=> 3 + Math.floor(Math.random()*3) },
+  { id:"multiline", desc:(n)=>`2ライン以上同時消去を${n}回`, gen:()=> 1 + Math.floor(Math.random()*2) },
+  { id:"special", desc:(n)=>`SPECIALを${n}回使う`, gen:()=> 1 + Math.floor(Math.random()*2) },
+  { id:"win", desc:(n)=>`対戦CPUに${n}回勝つ`, gen:()=> 1 },
+  { id:"lines", desc:(n)=>`合計${n}ライン消す`, gen:()=> 8 + Math.floor(Math.random()*4)*4 },
+];
+
+const DAILY_BONUS_TABLE = [0, 30, 80, 150];
+
+/* =========================================================
+   セーブデータ
+   ========================================================= */
+function defaultSave(){
+  return {
+    bestScore: 0,
+    coins: 0,
+    ownedSkins: ["default"],
+    equippedSkin: "default",
+    selectedChar: "cat",
+    daily: { dateKey: null, missions: [], claimed: 0 },
+    stats: { bestCombo:0, specialUsed:0, totalLinesCleared:0, cpuWins:0 }
+  };
 }
-function blankPixels(){ return Array.from({length:SIZE*SIZE},()=>null); }
-function makeLayer(name){ return {id:crypto.randomUUID(), name, visible:true, opacity:1, pixels:blankPixels()}; }
-function makeFrame(name){ return {id:crypto.randomUUID(), name, duration:ui.animSpeed, layers:[makeLayer("Base"), makeLayer("FX")]}; }
-function makeProject(name="Untitled"){
-  return {id:crypto.randomUUID(), name, attribute:"火", rarity:"N", size:SIZE, frames:[makeFrame("Frame 1")], currentFrame:0, currentLayer:0, updatedAt:Date.now()};
+let SAVE = loadSave();
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return defaultSave();
+    return Object.assign(defaultSave(), JSON.parse(raw));
+  }catch(e){ return defaultSave(); }
 }
-function clone(v){ return JSON.parse(JSON.stringify(v)); }
-function loadProjects(){
-  const s = localStorage.getItem(STORAGE_KEY);
-  if(!s){
-    const initial=[makeProject("Star Blade")];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-    return initial;
+function writeSave(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); }catch(e){}
+}
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function ensureDaily(){
+  const key = todayKey();
+  if(SAVE.daily.dateKey !== key){
+    const shuffled = DAILY_TEMPLATES.slice().sort(()=>Math.random()-0.5).slice(0,3);
+    SAVE.daily = {
+      dateKey: key,
+      missions: shuffled.map(t=>{
+        const target = t.gen();
+        return { id:t.id, target, progress:0, done:false };
+      }),
+      claimed: 0
+    };
+    writeSave();
   }
-  try { return JSON.parse(s); } catch { return [makeProject("Star Blade")]; }
-}
-function saveProjects(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); }
-let projects = loadProjects();
-ui.project = projects[0];
-ui.selectedHistoryId = ui.project.id;
-ui.currentFrame = ui.project.currentFrame || 0;
-ui.currentLayer = ui.project.currentLayer || 0;
-setCanvasSize(ui.project.size || 32);
-
-function currentFrame(){ return ui.project.frames[ui.currentFrame]; }
-function currentLayer(){ return currentFrame().layers[ui.currentLayer]; }
-function setStatus(t){ document.getElementById("status").textContent=t; }
-function syncUI(){
-  document.getElementById("projectBadge").textContent = `${ui.project.name} / ${ui.project.attribute} / ${ui.project.rarity}`;
-  document.getElementById("frameBadge").textContent = `Frame ${ui.currentFrame+1} / ${ui.project.frames.length}`;
-  document.getElementById("layerBadge").textContent = `Layer ${ui.currentLayer+1} / ${currentFrame().layers.length}`;
-  document.getElementById("toolBadge").textContent = ui.tool;
-  document.getElementById("nameInput").value = ui.project.name;
-  document.getElementById("attrInput").value = ui.project.attribute;
-  document.getElementById("rarityInput").value = ui.project.rarity;
-  document.getElementById("sizeInput").value = String(SIZE);
-  document.getElementById("brushInput").value = String(ui.brush);
-  document.getElementById("opacityInput").value = String(ui.opacity);
-  document.getElementById("animSpeedInput").value = String(ui.animSpeed);
-  document.getElementById("selBadge").textContent = ui.selection ? `Selection: ${ui.selection.length}` : "Selection: off";
 }
 
-function saveProject(message=true){
-  ui.project.currentFrame = ui.currentFrame;
-  ui.project.currentLayer = ui.currentLayer;
-  ui.project.size = SIZE;
-  ui.project.updatedAt = Date.now();
-  const idx=projects.findIndex(p=>p.id===ui.project.id);
-  if(idx>=0) projects[idx]=ui.project; else projects.unshift(ui.project);
-  saveProjects();
-  renderAll();
-  if(message) setStatus("保存しました");
-}
-function loadProjectById(id){
-  const p=projects.find(v=>v.id===id);
-  if(!p) return;
-  ui.project=clone(p);
-  setCanvasSize(ui.project.size || 32);
-  ui.currentFrame=ui.project.currentFrame || 0;
-  ui.currentLayer=ui.project.currentLayer || 0;
-  ui.selection = null;
-  syncUI(); renderAll(); setStatus("読み込みました");
-}
-function parseCssColor(c){
-  if(!c) return null;
-  if(c.startsWith("#")) return hexToRgba(c);
-  const m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
-  if(!m) return null;
-  return {r:+m[1], g:+m[2], b:+m[3], a:Math.round((m[4]===undefined?1:+m[4])*255)};
-}
-function rgbaToCss(p){ return `rgba(${p.r},${p.g},${p.b},${p.a/255})`; }
-function hexToRgba(hex){
-  const h=hex.replace("#","");
-  return {r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16), a:255};
-}
-function sameColor(a,b,tol=0){
-  const pa=parseCssColor(a), pb=parseCssColor(b);
-  if(!pa||!pb) return false;
-  return Math.abs(pa.r-pb.r)+Math.abs(pa.g-pb.g)+Math.abs(pa.b-pb.b)+Math.abs(pa.a-pb.a) <= tol;
-}
-function inBounds(x,y){ return x>=0&&y>=0&&x<SIZE&&y<SIZE; }
-function idx(x,y){ return y*SIZE+x; }
-function setPixel(layer,x,y,color){
-  if(!inBounds(x,y)) return;
-  layer.pixels[idx(x,y)] = color;
-}
-function getPixel(layer,x,y){
-  if(!inBounds(x,y)) return null;
-  return layer.pixels[idx(x,y)];
-}
-function clearPixel(layer,x,y){
-  if(!inBounds(x,y)) return;
-  layer.pixels[idx(x,y)] = null;
-}
-function floodFill(layer,x,y,target,replacement){
-  if(target===replacement) return;
-  const q=[[x,y]];
-  while(q.length){
-    const [cx,cy]=q.pop();
-    if(!inBounds(cx,cy)) continue;
-    const i=idx(cx,cy);
-    if(layer.pixels[i]!==target) continue;
-    layer.pixels[i]=replacement;
-    q.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+/* =========================================================
+   数値カウントアップ表示ユーティリティ
+   ========================================================= */
+function animateCount(el, from, to, duration=450){
+  if(from === to){ el.textContent = to; return; }
+  const start = performance.now();
+  el.classList.remove("counting");
+  void el.offsetWidth;
+  el.classList.add("counting");
+  function step(t){
+    const p = Math.min(1, (t-start)/duration);
+    const eased = 1 - Math.pow(1-p, 3);
+    const val = Math.round(from + (to-from)*eased);
+    el.textContent = val;
+    if(p<1) requestAnimationFrame(step);
+    else el.textContent = to;
   }
-}
-function eraseSameColor(layer,color,tol){
-  for(let i=0;i<layer.pixels.length;i++) if(layer.pixels[i] && sameColor(layer.pixels[i], color, tol)) layer.pixels[i]=null;
-}
-function cellFromEvent(ev){
-  const rect=view.getBoundingClientRect();
-  const x=Math.floor((ev.clientX-rect.left)/rect.width*SIZE);
-  const y=Math.floor((ev.clientY-rect.top)/rect.height*SIZE);
-  if(!inBounds(x,y)) return null;
-  return {x,y};
-}
-function shapeCells(type,x,y,size){
-  const out=[];
-  const r=Math.max(0,Math.floor(size/2));
-  if(type==="stampRect"){
-    for(let yy=-r; yy<=r; yy++) for(let xx=-r; xx<=r; xx++) out.push([x+xx,y+yy]);
-  }else if(type==="stampCircle"){
-    for(let yy=-r; yy<=r; yy++) for(let xx=-r; xx<=r; xx++) if(xx*xx+yy*yy<=r*r) out.push([x+xx,y+yy]);
-  }else if(type==="stampLine"){
-    for(let i=0;i<size;i++) out.push([x-r+i, y-r+i]);
-  }
-  return out;
+  requestAnimationFrame(step);
 }
 
-function selectionContains(x,y){
-  if(!ui.selection) return false;
-  return ui.selection.some(p=>p[0]===x && p[1]===y);
+/* =========================================================
+   画面遷移
+   ========================================================= */
+const screens = document.querySelectorAll(".screen");
+function showScreen(name){
+  screens.forEach(s=>s.classList.remove("active"));
+  const el = document.getElementById("screen-"+name);
+  if(el) el.classList.add("active");
+  if(name === "home") renderHome();
+  if(name === "shop") renderShop();
+  if(name === "daily") renderDaily();
+  if(name === "charselect") renderCharSelect();
+  if(name === "versuspick") renderVersusList();
 }
-function captureSelection(frame){
-  if(!ui.selection) return null;
-  const layers = frame.layers.map(l=>({ ...l, pixels: l.pixels.slice() }));
-  return { layers, points: ui.selection.map(p=>[p[0],p[1]]) };
-}
-function pasteSelection(frame, buffer, dx, dy){
-  if(!buffer) return;
-  const map = new Map(buffer.points.map(([x,y])=>[`$${x},${y}`, true]));
-  for(const layer of frame.layers){
-    for(const [x,y] of buffer.points){
-      const nx=x+dx, ny=y+dy;
-      if(!inBounds(nx,ny)) continue;
-      const c = layer.pixels[idx(x,y)];
-      if(c) layer.pixels[idx(nx,ny)] = c;
-      if(map.has(`$${x},${y}`)) layer.pixels[idx(x,y)] = null;
+
+document.querySelectorAll("[data-nav]").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    const nav = el.getAttribute("data-nav");
+    if(nav === "play"){
+      startGame(currentVersusCpu);
+    } else {
+      showScreen(nav);
     }
-  }
+  });
+});
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove("show"), 1800);
 }
-function clearSelectionArea(frame){
-  if(!ui.selection) return;
-  for(const layer of frame.layers){
-    for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
-  }
+
+/* =========================================================
+   HOME 画面描画
+   ========================================================= */
+let homeCoinPrev = SAVE.coins;
+function renderHome(){
+  animateCount(document.getElementById("homeCoin"), homeCoinPrev, SAVE.coins, 500);
+  homeCoinPrev = SAVE.coins;
+  document.getElementById("homeBest").textContent = SAVE.bestScore;
+  const ch = CHARACTERS.find(c=>c.id===SAVE.selectedChar) || CHARACTERS[0];
+  document.getElementById("homeCharIco").textContent = ch.icon;
+  document.getElementById("homeCharName").textContent = ch.name;
+  document.getElementById("homeCharTrait").textContent = ch.trait;
 }
-function drawFrame(frame, alpha=1, targetCtx=ctx){
-  if(!frame) return;
-  for(const layer of frame.layers){
-    if(!layer.visible) continue;
-    targetCtx.globalAlpha = alpha * layer.opacity;
-    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const c = layer.pixels[idx(x,y)];
-      if(!c) continue;
-      targetCtx.fillStyle = c;
-      targetCtx.fillRect(x*16,y*16,16,16);
-    }
-  }
-  targetCtx.globalAlpha = 1;
-}
-function drawSelectionOverlay(){
-  if(!ui.selection) return;
-  ctx.save();
-  ctx.fillStyle = "rgba(125,211,252,.22)";
-  for(const [x,y] of ui.selection) ctx.fillRect(x*16,y*16,16,16);
-  ctx.strokeStyle = "rgba(255,255,255,.9)";
-  ctx.lineWidth = 1;
-  for(const [x,y] of ui.selection) ctx.strokeRect(x*16+.5,y*16+.5,15,15);
-  ctx.restore();
-}
-function renderCanvas(){
-  ctx.clearRect(0,0,view.width,view.height);
-  ctx.imageSmoothingEnabled = false;
-  if(ui.onion && ui.project.frames.length>1){
-    drawFrame(ui.project.frames[ui.currentFrame-1],0.18);
-    drawFrame(ui.project.frames[ui.currentFrame+1],0.18);
-  }
-  drawFrame(currentFrame(),1);
-  if(ui.grid){
-    ctx.strokeStyle="rgba(255,255,255,.08)";
-    ctx.lineWidth=1;
-    for(let i=0;i<=SIZE;i++){
-      ctx.beginPath(); ctx.moveTo(i*16+.5,0); ctx.lineTo(i*16+.5,view.height); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0,i*16+.5); ctx.lineTo(view.width,i*16+.5); ctx.stroke();
-    }
-  }
-  drawSelectionOverlay();
-}
-function renderPalette(){
-  const wrap=document.getElementById("palette");
-  wrap.innerHTML="";
-  ui.palette.forEach(c=>{
-    const b=document.createElement("button");
-    b.className="pal"; b.style.background=c; b.title=c;
-    if(ui.color===c) b.style.outline="2px solid #7dd3fc";
-    b.onclick=()=>{ ui.color=c; document.getElementById("colorInput").value=c; renderAll(); };
-    wrap.appendChild(b);
+
+/* =========================================================
+   キャラ選択画面
+   ========================================================= */
+function renderCharSelect(){
+  const grid = document.getElementById("charGrid");
+  grid.innerHTML = "";
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement("div");
+    card.className = "char-card" + (c.id===SAVE.selectedChar ? " selected":"");
+    card.innerHTML = `
+      <div class="ico">${c.icon}</div>
+      <div class="name">${c.name}</div>
+      <div class="trait">${c.trait}</div>
+      <div class="char-select-btn">${c.id===SAVE.selectedChar ? "選択中" : "選ぶ"}</div>
+    `;
+    card.addEventListener("click", ()=>{
+      SAVE.selectedChar = c.id;
+      writeSave();
+      renderCharSelect();
+      toast(`${c.name} を選択しました`);
+    });
+    grid.appendChild(card);
   });
 }
-function renderLayerList(){
-  const wrap=document.getElementById("layerList");
-  wrap.innerHTML="";
-  currentFrame().layers.forEach((l,i)=>{
-    const row=document.createElement("div");
-    row.className="item"+(i===ui.currentLayer?" active":"");
-    const th=document.createElement("canvas");
-    th.width=32; th.height=32; th.className="thumb";
-    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
-    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){ const c=l.pixels[idx(x,y)]; if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); } }
-    const mid=document.createElement("div");
-    mid.innerHTML=`<div>${l.name}</div><div class="hint">${Math.round(l.opacity*100)}% ${l.visible?"表示":"非表示"}</div>`;
-    const vis=document.createElement("button");
-    vis.className="smallbtn"; vis.textContent=l.visible?"👁":"×";
-    vis.onclick=e=>{ e.stopPropagation(); l.visible=!l.visible; saveProject(false); };
-    row.onclick=()=>{ ui.currentLayer=i; renderAll(); };
-    row.appendChild(th); row.appendChild(mid); row.appendChild(vis);
-    wrap.appendChild(row);
+
+/* =========================================================
+   ショップ画面
+   ========================================================= */
+function renderShop(){
+  document.getElementById("shopCoin").textContent = SAVE.coins;
+  const grid = document.getElementById("skinGrid");
+  grid.innerHTML = "";
+  SKINS.forEach(s=>{
+    const owned = SAVE.ownedSkins.includes(s.id);
+    const equipped = SAVE.equippedSkin === s.id;
+    const card = document.createElement("div");
+    card.className = "skin-card" + (equipped ? " equipped":"");
+    const previewCells = Array.from({length:8}, (_,i)=> s.colors[i % s.colors.length]);
+    card.innerHTML = `
+      <div class="skin-preview">${previewCells.map(c=>`<div style="background:${c};--glow-color:${c}"></div>`).join("")}</div>
+      <div class="skin-name">${s.name}</div>
+      <div class="skin-price">${s.price===0 ? "無料" : "🪙 "+s.price}</div>
+      <div class="skin-btn ${owned ? (equipped?"equipped-btn":"owned") : ""}">${equipped ? "装備中" : (owned ? "装備する" : "購入する")}</div>
+    `;
+    const btn = card.querySelector(".skin-btn");
+    btn.addEventListener("click", ()=>{
+      if(equipped) return;
+      if(owned){
+        SAVE.equippedSkin = s.id;
+        writeSave();
+        renderShop();
+        toast(`${s.name} を装備しました`);
+      } else {
+        if(SAVE.coins >= s.price){
+          SAVE.coins -= s.price;
+          SAVE.ownedSkins.push(s.id);
+          SAVE.equippedSkin = s.id;
+          writeSave();
+          renderShop();
+          toast(`${s.name} を購入しました！`);
+        } else {
+          toast("コインが足りません");
+        }
+      }
+    });
+    grid.appendChild(card);
   });
-}
-function renderFrameList(){
-  const wrap=document.getElementById("frameList"); if(!wrap) return;
-  wrap.innerHTML="";
-  ui.project.frames.forEach((f,i)=>{
-    const row=document.createElement("div");
-    row.className="item"+(i===ui.currentFrame?" active":"");
-    const th=document.createElement("canvas");
-    th.width=32; th.height=32; th.className="thumb";
-    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
-    for(const layer of f.layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const c=layer.pixels[idx(x,y)];
-      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
-    }
-    const mid=document.createElement("div");
-    mid.innerHTML=`<div>${f.name}</div><div class="hint">${f.duration}ms</div>`;
-    const btn=document.createElement("button");
-    btn.className="smallbtn"; btn.textContent="選択";
-    btn.onclick=e=>{ e.stopPropagation(); ui.currentFrame=i; ui.currentLayer=0; renderAll(); };
-    row.onclick=()=>{ ui.currentFrame=i; ui.currentLayer=0; renderAll(); };
-    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
-    wrap.appendChild(row);
-  });
-}
-function renderHistory(){
-  const wrap=document.getElementById("historyList");
-  wrap.innerHTML="";
-  projects.forEach(p=>{
-    const row=document.createElement("div");
-    row.className="item"+(p.id===ui.selectedHistoryId?" active":"");
-    const th=document.createElement("canvas");
-    th.width=32; th.height=32; th.className="thumb";
-    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
-    if(p.frames[0]) for(const layer of p.frames[0].layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const c=layer.pixels[idx(x,y)];
-      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
-    }
-    const mid=document.createElement("div");
-    mid.innerHTML=`<div>${p.name}</div><div class="hint">${p.attribute} / ${p.rarity} / ${p.size}×${p.size}</div>`;
-    const btn=document.createElement("button");
-    btn.className="smallbtn"; btn.textContent="開く";
-    btn.onclick=e=>{ e.stopPropagation(); loadProjectById(p.id); };
-    row.onclick=()=>{ ui.selectedHistoryId=p.id; renderHistory(); };
-    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
-    wrap.appendChild(row);
-  });
-}
-function renderTemplateList(){
-  const wrap=document.getElementById("templateList");
-  if(!wrap) return;
-  const list=JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
-  wrap.innerHTML="";
-  list.forEach(t=>{
-    const row=document.createElement("div");
-    row.className="item"+(t.id===ui.selectedTemplateId?" active":"");
-    const th=document.createElement("canvas");
-    th.width=32; th.height=32; th.className="thumb";
-    const tctx=th.getContext("2d"); tctx.imageSmoothingEnabled=false;
-    if(t.frames[0]) for(const layer of t.frames[0].layers) if(layer.visible) for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const c=layer.pixels[idx(x,y)];
-      if(c){ tctx.fillStyle=c; tctx.fillRect(x,y,1,1); }
-    }
-    const mid=document.createElement("div");
-    mid.innerHTML=`<div>${t.name}</div><div class="hint">${t.attribute} / ${t.rarity}</div>`;
-    const btn=document.createElement("button");
-    btn.className="smallbtn"; btn.textContent="適用";
-    btn.onclick=e=>{ e.stopPropagation(); ui.selectedTemplateId=t.id; ui.project.frames=clone(t.frames); ui.currentFrame=0; ui.currentLayer=0; setCanvasSize(t.size || SIZE); renderAll(); saveProject(); };
-    row.onclick=()=>{ ui.selectedTemplateId=t.id; renderTemplateList(); };
-    row.appendChild(th); row.appendChild(mid); row.appendChild(btn);
-    wrap.appendChild(row);
-  });
-}
-function renderAll(){
-  syncUI();
-  renderPalette();
-  renderLayerList();
-  renderFrameList();
-  renderHistory();
-  renderTemplateList();
-  renderCanvas();
 }
 
-function randomWeaponName(){
-  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
-  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
-  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
+/* =========================================================
+   デイリー画面 (達成段階で演出を変える)
+   ========================================================= */
+function renderDaily(){
+  ensureDaily();
+  const list = document.getElementById("dailyList");
+  list.innerHTML = "";
+  const doneCount = SAVE.daily.missions.filter(m=>m.done).length;
+
+  SAVE.daily.missions.forEach((m)=>{
+    const tmpl = DAILY_TEMPLATES.find(t=>t.id===m.id);
+    const card = document.createElement("div");
+    card.className = "daily-card" + (m.done ? " done":"");
+    card.innerHTML = `
+      <div class="daily-check">${m.done ? "✓" : ""}</div>
+      <div class="daily-info">
+        <div class="title">${tmpl.desc(m.target)}</div>
+        <div class="desc">進捗: ${Math.min(m.progress,m.target)} / ${m.target}</div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  const bar = document.getElementById("dailyBonusBar");
+  if(doneCount >= 3){
+    bar.textContent = `🎉 本日のミッション全達成！ ボーナス +${DAILY_BONUS_TABLE[3]}コイン獲得済み`;
+  } else {
+    bar.textContent = `達成数 ${doneCount}/3 ・ 全達成でボーナス+${DAILY_BONUS_TABLE[3]}コイン`;
+  }
 }
 
-function ensureSelection(points){
-  ui.selection = points;
-  ui.selectionBuffer = null;
-  ui.selectionMode = null;
-  ui.selectionAnchor = null;
-  syncUI();
+function spawnConfetti(amount){
+  const colors = ["#ffd166","#4cf0ff","#ff5ec4","#4dffa0","#b388ff"];
+  for(let i=0;i<amount;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.left = (Math.random()*100)+"vw";
+    p.style.top = "-10px";
+    p.style.borderRadius = Math.random()>0.5 ? "50%" : "2px";
+    document.body.appendChild(p);
+    const fallTime = 1400+Math.random()*900;
+    const rot = (Math.random()-0.5)*720;
+    const driftX = (Math.random()-0.5)*120;
+    let t0 = performance.now();
+    function step(t){
+      const dt = (t-t0)/fallTime;
+      if(dt>=1){ p.remove(); return; }
+      p.style.transform = `translate(${driftX*dt}px, ${dt*window.innerHeight*1.05}px) rotate(${rot*dt}deg)`;
+      p.style.opacity = 1-Math.max(0,dt-0.7)/0.3;
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
 }
-function clearSelection(){ ui.selection=null; ui.selectionBuffer=null; ui.selectionMode=null; ui.selectionAnchor=null; syncUI(); renderAll(); }
 
-function paintAt(x,y){
-  const layer = currentLayer();
-  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
+// 達成段階(1つ/2つ/全部)に応じて演出を強める
+function progressDaily(type, amount){
+  ensureDaily();
+  let newlyDone = [];
+  SAVE.daily.missions.forEach(m=>{
+    if(m.id === type && !m.done){
+      m.progress += amount;
+      if(m.progress >= m.target){
+        m.done = true;
+        newlyDone.push(m);
+      }
+    }
+  });
+  if(newlyDone.length){
+    let bonus = newlyDone.length * 25;
+    SAVE.coins += bonus;
+    const doneCount = SAVE.daily.missions.filter(m=>m.done).length;
+
+    if(doneCount===1) toast(`デイリー達成！ +${bonus}コイン`);
+    else if(doneCount===2){ toast(`デイリー2つ達成！ +${bonus}コイン`); spawnConfetti(14); }
+    else if(doneCount>=3 && SAVE.daily.claimed < 1){
+      SAVE.coins += DAILY_BONUS_TABLE[3];
+      SAVE.daily.claimed = 1;
+      toast(`🎉 デイリー全達成！ +${DAILY_BONUS_TABLE[3]}コイン`);
+      spawnConfetti(36);
+    }
+    writeSave();
+  }
+}
+
+/* =========================================================
+   対戦相手選択
+   ========================================================= */
+let currentVersusCpu = null;
+function renderVersusList(){
+  const list = document.getElementById("versusList");
+  list.innerHTML = "";
+  CPU_LIST.forEach(cpu=>{
+    const card = document.createElement("div");
+    card.className = "versus-cpu-card";
+    card.innerHTML = `
+      <div class="ico">${cpu.icon}</div>
+      <div>
+        <div class="name">${cpu.name}</div>
+        <div class="desc">${cpu.desc}</div>
+      </div>
+      <div class="pick-btn">対戦</div>
+    `;
+    card.querySelector(".pick-btn").addEventListener("click", ()=>{
+      currentVersusCpu = cpu;
+      startGame(cpu);
+    });
+    list.appendChild(card);
+  });
+}
+
+/* =========================================================
+   ゲーム本体 - 状態
+   ========================================================= */
+let game = null;
+
+function emptyBoard(){
+  return Array.from({length:GRID_SIZE}, ()=> Array.from({length:GRID_SIZE}, ()=> null));
+}
+
+function createGame(versusCpu){
+  return {
+    board: emptyBoard(),
+    ghostBoard: versusCpu ? emptyBoard() : null,
+    versusCpu: versusCpu || null,
+    score: 0,
+    displayScore: 0,
+    ghostScore: 0,
+    comboCount: 0,
+    special: 0,
+    specialUsedCount: 0,
+    maxCombo: 0,
+    pieces: [null,null,null],
+    history: [],
+    undoUsed: false,
+    gameOver: false,
+    character: CHARACTERS.find(c=>c.id===SAVE.selectedChar) || CHARACTERS[0],
+    skin: SKINS.find(s=>s.id===SAVE.equippedSkin) || SKINS[0],
+    cpuTimer: null,
+    linesThisGame: 0,
+    multiLineCount: 0,
+  };
+}
+
+/* =========================================================
+   ピース生成
+   ========================================================= */
+function randomPiece(){
+  const shape = PIECE_SHAPES[Math.floor(Math.random()*PIECE_SHAPES.length)];
+  const minR = Math.min(...shape.map(p=>p[0]));
+  const minC = Math.min(...shape.map(p=>p[1]));
+  const norm = shape.map(p=> [p[0]-minR, p[1]-minC]);
+  const colorIdx = Math.floor(Math.random()*game.skin.colors.length);
+  return { cells: norm, color: game.skin.colors[colorIdx] };
+}
+function refillPieces(){
+  for(let i=0;i<3;i++){
+    if(!game.pieces[i]) game.pieces[i] = randomPiece();
+  }
+  renderPieceTray();
+}
+
+/* =========================================================
+   盤面ロジック
+   ========================================================= */
+function canPlace(board, piece, row, col){
+  for(const [dr,dc] of piece.cells){
+    const r = row+dr, c = col+dc;
+    if(r<0||r>=GRID_SIZE||c<0||c>=GRID_SIZE) return false;
+    if(board[r][c]) return false;
+  }
+  return true;
+}
+function placePiece(board, piece, row, col){
+  for(const [dr,dc] of piece.cells){
+    board[row+dr][col+dc] = piece.color;
+  }
+}
+function anyPlacementPossible(board, pieces){
+  for(const piece of pieces){
+    if(!piece) continue;
+    for(let r=0;r<GRID_SIZE;r++){
+      for(let c=0;c<GRID_SIZE;c++){
+        if(canPlace(board, piece, r, c)) return true;
+      }
+    }
+  }
+  return false;
+}
+function findClearedLines(board){
+  const rows = [];
+  const cols = [];
+  for(let r=0;r<GRID_SIZE;r++){
+    if(board[r].every(v=>v)) rows.push(r);
+  }
+  for(let c=0;c<GRID_SIZE;c++){
+    let full = true;
+    for(let r=0;r<GRID_SIZE;r++){ if(!board[r][c]){ full=false; break; } }
+    if(full) cols.push(c);
+  }
+  return {rows, cols};
+}
+function clearLines(board, rows, cols){
+  rows.forEach(r=>{ for(let c=0;c<GRID_SIZE;c++) board[r][c] = null; });
+  cols.forEach(c=>{ for(let r=0;r<GRID_SIZE;r++) board[r][c] = null; });
+}
+
+/* =========================================================
+   メイン盤面 DOM 描画
+   ========================================================= */
+const mainGridEl = document.getElementById("mainGrid");
+const ghostGridEl = document.getElementById("ghostGrid");
+
+function buildGridDom(container, size){
+  container.innerHTML = "";
   const cells = [];
-  const half = Math.floor(ui.brush/2);
-  for(let yy=-half; yy<=half; yy++) for(let xx=-half; xx<=half; xx++) cells.push([x+xx,y+yy]);
-  const handleCell = (cx,cy)=>{
-    if(!inBounds(cx,cy)) return;
-    if(ui.selection && ui.selectionMode!=="move" && !selectionContains(cx,cy)) return;
-    if(ui.tool==="pen"){
-      if(ui.alphaLock && !getPixel(layer,cx,cy)) return;
-      setPixel(layer,cx,cy,color);
-    }else if(ui.tool==="erase"){
-      clearPixel(layer,cx,cy);
-    }else if(ui.tool==="eraseColor"){
-      const c=getPixel(layer,cx,cy);
-      if(c) eraseSameColor(layer,c,ui.tolerance);
-    }else if(ui.tool==="fill"){
-      const target=getPixel(layer,cx,cy);
-      floodFill(layer,cx,cy,target,color);
-    }else if(ui.tool==="pick"){
-      const c=getPixel(layer,cx,cy);
-      if(c){ ui.color=c; document.getElementById("colorInput").value=c; }
-    }else if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
-      // handled on pointer up
-    }else if(ui.tool==="lasso"){
-      // handled separately
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const div = document.createElement("div");
+      div.className = "cell";
+      div.dataset.r = r;
+      div.dataset.c = c;
+      container.appendChild(div);
+      cells.push(div);
     }
-    if(ui.mirrorX) handleMirrorX(cx,cy,color);
-    if(ui.mirrorY) handleMirrorY(cx,cy,color);
+  }
+  return cells;
+}
+let mainCells = [];
+let ghostCells = [];
+
+function renderBoard(){
+  for(let r=0;r<GRID_SIZE;r++){
+    for(let c=0;c<GRID_SIZE;c++){
+      const idx = r*GRID_SIZE+c;
+      const val = game.board[r][c];
+      const cellEl = mainCells[idx];
+      cellEl.classList.remove("hint-ok","hint-bad");
+      if(val){
+        cellEl.classList.add("filled");
+        cellEl.style.background = val;
+        cellEl.style.setProperty("--glow-color", val);
+      } else {
+        cellEl.classList.remove("filled");
+        cellEl.style.background = "";
+        cellEl.style.setProperty("--glow-color","transparent");
+      }
+    }
+  }
+  if(game.ghostBoard){
+    for(let r=0;r<GRID_SIZE;r++){
+      for(let c=0;c<GRID_SIZE;c++){
+        const idx = r*GRID_SIZE+c;
+        const val = game.ghostBoard[r][c];
+        const cellEl = ghostCells[idx];
+        if(val){ cellEl.style.background = val; cellEl.classList.add("filled"); }
+        else { cellEl.style.background = ""; cellEl.classList.remove("filled"); }
+      }
+    }
+  }
+}
+
+let hudScorePrev = 0, hudBestPrev = 0, ghostScorePrev = 0;
+function updateHud(){
+  animateCount(document.getElementById("hudScore"), hudScorePrev, game.score, 380);
+  hudScorePrev = game.score;
+  const bestNow = Math.max(SAVE.bestScore, game.score);
+  animateCount(document.getElementById("hudBest"), hudBestPrev, bestNow, 380);
+  hudBestPrev = bestNow;
+
+  document.getElementById("specialFill").style.width = Math.min(100, game.special) + "%";
+  document.getElementById("specialLabel").textContent = game.special>=100 ? "SPECIAL READY!" : `SPECIAL ${Math.floor(game.special)}%`;
+  document.getElementById("specialGaugeWrap").classList.toggle("ready", game.special>=85);
+  document.getElementById("hudCharIco").textContent = game.character.icon;
+  document.getElementById("hudCharName").textContent = game.character.name;
+
+  const ghostLabel = document.getElementById("ghostScoreLabel");
+  if(ghostLabel){
+    ghostLabel.textContent = "CPU: " + game.ghostScore;
+  }
+
+  const specialBtn = document.getElementById("btnSpecial");
+  specialBtn.classList.toggle("special-ready", game.special>=100);
+  specialBtn.disabled = game.special < 100;
+
+  document.getElementById("btnUndo").disabled = game.undoUsed || game.history.length===0;
+}
+
+/* =========================================================
+   ピーストレイ描画 + ドラッグ操作
+   ========================================================= */
+function renderPieceTray(){
+  for(let i=0;i<3;i++){
+    const wrap = document.getElementById("pieceGrid"+i);
+    wrap.innerHTML = "";
+    const piece = game.pieces[i];
+    if(!piece){ wrap.style.display="none"; continue; }
+    wrap.style.display = "grid";
+    const maxR = Math.max(...piece.cells.map(p=>p[0]))+1;
+    const maxC = Math.max(...piece.cells.map(p=>p[1]))+1;
+    wrap.style.gridTemplateColumns = `repeat(${maxC}, 17px)`;
+    wrap.style.gridTemplateRows = `repeat(${maxR}, 17px)`;
+    const set = new Set(piece.cells.map(p=>p[0]+","+p[1]));
+    for(let r=0;r<maxR;r++){
+      for(let c=0;c<maxC;c++){
+        const cellDiv = document.createElement("div");
+        if(set.has(r+","+c)){
+          cellDiv.className = "piece-cell";
+          cellDiv.style.background = piece.color;
+          cellDiv.style.setProperty("--glow-color", piece.color);
+        } else {
+          cellDiv.className = "piece-cell empty";
+        }
+        wrap.appendChild(cellDiv);
+      }
+    }
+    wrap.dataset.slot = i;
+    attachDrag(wrap, i);
+  }
+}
+
+let dragState = null;
+
+function attachDrag(el, slotIdx){
+  el.onpointerdown = (ev)=>{
+    if(game.gameOver) return;
+    if(!game.pieces[slotIdx]) return;
+    ev.preventDefault();
+    const piece = game.pieces[slotIdx];
+    const ghostEl = el.cloneNode(true);
+    ghostEl.style.position = "fixed";
+    ghostEl.style.zIndex = 999;
+    ghostEl.style.pointerEvents = "none";
+    ghostEl.style.opacity = "0.95";
+    ghostEl.style.transform = "scale(1.35)";
+    ghostEl.style.filter = "drop-shadow(0 6px 14px rgba(0,0,0,0.5))";
+    document.body.appendChild(ghostEl);
+    el.style.opacity = "0.25";
+
+    dragState = { slotIdx, piece, ghostEl };
+    moveGhost(ev.clientX, ev.clientY);
+    document.onpointermove = onDragMove;
+    document.onpointerup = onDragEnd;
   };
-  cells.forEach(([cx,cy])=>handleCell(cx,cy));
-  renderAll();
 }
-function handleMirrorX(x,y,color){
-  const mx = SIZE-1-x;
-  if(ui.tool==="erase") clearPixel(currentLayer(),mx,y);
-  else if(ui.tool==="eraseColor"){ const c=getPixel(currentLayer(),mx,y); if(c) eraseSameColor(currentLayer(),c,ui.tolerance); }
-  else setPixel(currentLayer(),mx,y,color);
+
+function moveGhost(x,y){
+  if(!dragState) return;
+  const ge = dragState.ghostEl;
+  ge.style.left = (x - ge.offsetWidth/2) + "px";
+  ge.style.top = (y - ge.offsetHeight/2 - 70) + "px";
 }
-function handleMirrorY(x,y,color){
-  const my = SIZE-1-y;
-  if(ui.tool==="erase") clearPixel(currentLayer(),x,my);
-  else if(ui.tool==="eraseColor"){ const c=getPixel(currentLayer(),x,my); if(c) eraseSameColor(currentLayer(),c,ui.tolerance); }
-  else setPixel(currentLayer(),x,my,color);
+
+function boardCellFromPoint(x,y){
+  const rect = mainGridEl.getBoundingClientRect();
+  const padding = 10, gap = 4;
+  const cellSize = (rect.width - padding*2 - gap*(GRID_SIZE-1)) / GRID_SIZE;
+  const localX = x - rect.left - padding;
+  const localY = y - rect.top - padding - 70;
+  const c = Math.floor(localX / (cellSize+gap));
+  const r = Math.floor(localY / (cellSize+gap));
+  if(r<0||r>=GRID_SIZE||c<0||c>=GRID_SIZE) return null;
+  return {r,c};
 }
-function stampAt(x,y){
-  const layer=currentLayer();
-  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
-  const pts = shapeCells(ui.tool,x,y,Math.max(1,ui.brush));
-  pts.forEach(([cx,cy])=>{
-    if(!inBounds(cx,cy)) return;
-    setPixel(layer,cx,cy,color);
-    if(ui.mirrorX) setPixel(layer,SIZE-1-cx,cy,color);
-    if(ui.mirrorY) setPixel(layer,cx,SIZE-1-cy,color);
+
+function onDragMove(ev){
+  if(!dragState) return;
+  moveGhost(ev.clientX, ev.clientY);
+  clearHints();
+  const target = boardCellFromPoint(ev.clientX, ev.clientY);
+  if(target){
+    const ok = canPlace(game.board, dragState.piece, target.r, target.c);
+    paintHint(dragState.piece, target.r, target.c, ok);
+    dragState.lastTarget = target;
+    dragState.lastOk = ok;
+  } else {
+    dragState.lastTarget = null;
+  }
+}
+function clearHints(){
+  mainCells.forEach(c=>c.classList.remove("hint-ok","hint-bad"));
+}
+function paintHint(piece, row, col, ok){
+  for(const [dr,dc] of piece.cells){
+    const r=row+dr, c=col+dc;
+    if(r<0||r>=GRID_SIZE||c<0||c>=GRID_SIZE) continue;
+    const idx = r*GRID_SIZE+c;
+    mainCells[idx].classList.add(ok? "hint-ok":"hint-bad");
+  }
+}
+
+function onDragEnd(ev){
+  document.onpointermove = null;
+  document.onpointerup = null;
+  if(!dragState) return;
+  const { slotIdx, piece, ghostEl, lastTarget, lastOk } = dragState;
+  ghostEl.remove();
+  clearHints();
+  const slotEl = document.getElementById("pieceGrid"+slotIdx);
+  slotEl.style.opacity = "1";
+
+  if(lastTarget && lastOk){
+    commitPlacement(piece, lastTarget.r, lastTarget.c, slotIdx);
+  } else if(lastTarget && !lastOk){
+    // 置けない場所への配置試行 → 軽いバウンドで戻す感覚(トレイをわずかに振動)
+    slotEl.style.transition = "transform .15s ease";
+    slotEl.style.transform = "translateX(-4px)";
+    setTimeout(()=>{ slotEl.style.transform="translateX(3px)"; }, 90);
+    setTimeout(()=>{ slotEl.style.transform=""; }, 180);
+  }
+  dragState = null;
+}
+
+/* =========================================================
+   配置確定 → 消去 → コンボ → SPECIAL蓄積 → 演出
+   ========================================================= */
+function snapshotForUndo(){
+  game.history.push({
+    board: game.board.map(row=>row.slice()),
+    score: game.score,
+    special: game.special,
+    pieces: game.pieces.map(p=> p ? {cells:p.cells, color:p.color} : null),
   });
-  renderAll();
+  if(game.history.length>1) game.history.shift();
 }
-function importImage(file){
-  const img=new Image();
-  const url=URL.createObjectURL(file);
-  img.onload=()=>{
-    const off=document.createElement("canvas");
-    off.width=SIZE; off.height=SIZE;
-    const octx=off.getContext("2d",{willReadFrequently:true});
-    octx.imageSmoothingEnabled=true;
-    octx.clearRect(0,0,SIZE,SIZE);
-    octx.drawImage(img,0,0,SIZE,SIZE);
-    const d=octx.getImageData(0,0,SIZE,SIZE).data;
-    const layer=currentLayer();
-    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const i=(y*SIZE+x)*4, a=d[i+3];
-      if(a<10) continue;
-      layer.pixels[idx(x,y)] = `rgba(${d[i]},${d[i+1]},${d[i+2]},${(a/255).toFixed(3)})`;
+
+function commitPlacement(piece, row, col, slotIdx){
+  snapshotForUndo();
+  placePiece(game.board, piece, row, col);
+  game.pieces[slotIdx] = null;
+
+  playPlaceFeedback(row, col, piece);
+
+  const {rows, cols} = findClearedLines(game.board);
+  const totalLines = rows.length + cols.length;
+
+  if(totalLines>0){
+    handleLineClear(rows, cols, totalLines);
+  } else {
+    if(game.comboCount>0) game.comboCount = 0;
+  }
+
+  let specialGain = 1.5;
+  if(game.character.attr==="purify") specialGain *= 1.1;
+  game.special = Math.min(100, game.special + specialGain);
+
+  if(game.pieces.every(p=>!p)){
+    refillPieces();
+  } else {
+    renderPieceTray();
+  }
+
+  renderBoard();
+  updateHud();
+  checkGameOver();
+}
+
+function handleLineClear(rows, cols, totalLines){
+  game.comboCount += 1;
+  game.maxCombo = Math.max(game.maxCombo, game.comboCount);
+  game.linesThisGame += totalLines;
+  if(totalLines>=2) game.multiLineCount += 1;
+
+  let baseScore = totalLines * GRID_SIZE * 10;
+  let comboMult = 1 + (game.comboCount-1)*0.25;
+  let multiBonus = totalLines>=2 ? (1 + (totalLines-1)*0.5) : 1;
+  let charMult = game.character.attr==="clear_boost" ? 1.15 : 1;
+
+  let gained = Math.round(baseScore * comboMult * multiBonus * charMult);
+  game.score += gained;
+
+  let specialGain = totalLines * 8;
+  if(game.character.attr==="purify") specialGain *= 1.1;
+  game.special = Math.min(100, game.special + specialGain);
+
+  let coinGain = totalLines * 2 + (game.comboCount>=3?3:0);
+  if(game.character.attr==="coin_boost") coinGain = Math.round(coinGain*1.2);
+  SAVE.coins += coinGain;
+
+  progressDaily("lines", totalLines);
+  if(totalLines>=2) progressDaily("multiline", 1);
+
+  // ===== 演出: 先に光る→フラッシュ→縮小→粒子→揺れ→数字浮上 の順 =====
+  preGlowCells(rows, cols, ()=>{
+    flashClearedCells(rows, cols, totalLines);
+    showFloatingScore(gained);
+    if(game.comboCount>=2) showComboBanner(game.comboCount);
+    if(totalLines>=2){ screenShake(true); screenFlash(false,true); }
+    else { screenShake(false); screenFlash(false,false); }
+
+    setTimeout(()=>{
+      clearLines(game.board, rows, cols);
+      renderBoard();
+    }, 230);
+  });
+
+  writeSave();
+}
+
+function preGlowCells(rows, cols, callback){
+  const cellSet = new Set();
+  rows.forEach(r=>{ for(let c=0;c<GRID_SIZE;c++) cellSet.add(r*GRID_SIZE+c); });
+  cols.forEach(c=>{ for(let r=0;r<GRID_SIZE;r++) cellSet.add(r*GRID_SIZE+c); });
+  cellSet.forEach(idx=> mainCells[idx] && mainCells[idx].classList.add("pre-glow"));
+  setTimeout(()=>{
+    cellSet.forEach(idx=> mainCells[idx] && mainCells[idx].classList.remove("pre-glow"));
+    callback(cellSet);
+  }, 130);
+}
+
+function checkGameOver(){
+  if(!anyPlacementPossible(game.board, game.pieces)){
+    endGame(false);
+  }
+}
+
+/* =========================================================
+   演出関数群
+   ========================================================= */
+function flashClearedCells(rows, cols, totalLines){
+  const cellSet = new Set();
+  rows.forEach(r=>{ for(let c=0;c<GRID_SIZE;c++) cellSet.add(r*GRID_SIZE+c); });
+  cols.forEach(c=>{ for(let r=0;r<GRID_SIZE;r++) cellSet.add(r*GRID_SIZE+c); });
+  cellSet.forEach(idx=>{
+    mainCells[idx].classList.add("clearing");
+    setTimeout(()=> mainCells[idx] && mainCells[idx].classList.remove("clearing"), 440);
+  });
+  spawnParticles(cellSet.size, totalLines>=2);
+}
+
+function spawnParticles(count, big){
+  const boardArea = document.getElementById("boardArea");
+  const rect = mainGridEl.getBoundingClientRect();
+  const colors = game.skin.colors;
+  const n = Math.min(count*(big?3:2), big?40:26);
+  for(let i=0;i<n;i++){
+    const p = document.createElement("div");
+    p.className = "particle";
+    const size = (big? 5 : 4) + Math.random()*7;
+    p.style.width = size+"px";
+    p.style.height = size+"px";
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    p.style.background = col;
+    p.style.boxShadow = `0 0 ${big?10:6}px ${col}`;
+    const startX = rect.width/2 + (Math.random()-0.5)*rect.width*0.7;
+    const startY = rect.height/2 + (Math.random()-0.5)*rect.height*0.5;
+    p.style.left = startX+"px";
+    p.style.top = startY+"px";
+    boardArea.appendChild(p);
+    const angle = Math.random()*Math.PI*2;
+    const dist = (big?50:30)+Math.random()*(big?90:60);
+    const dx = Math.cos(angle)*dist;
+    const dy = Math.sin(angle)*dist;
+    let t0 = performance.now();
+    function step(t){
+      const dt = (t-t0)/(big?620:500);
+      if(dt>=1){ p.remove(); return; }
+      p.style.transform = `translate(${dx*dt}px, ${dy*dt - 30*dt}px) scale(${1-dt*0.4})`;
+      p.style.opacity = 1-dt;
+      requestAnimationFrame(step);
     }
-    URL.revokeObjectURL(url);
-    renderAll(); saveProject(); setStatus("画像を貼り付けました");
-  };
-  img.src=url;
+    requestAnimationFrame(step);
+  }
 }
-function exportPNG(frame=null, filename="weapon.png"){
-  const off=document.createElement("canvas");
-  off.width=SIZE*16; off.height=SIZE*16;
-  const octx=off.getContext("2d");
-  octx.imageSmoothingEnabled=false;
-  const f=frame || currentFrame();
-  for(const layer of f.layers){
-    if(!layer.visible) continue;
-    octx.globalAlpha=layer.opacity;
-    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-      const c=layer.pixels[idx(x,y)];
-      if(c){ octx.fillStyle=c; octx.fillRect(x*16,y*16,16,16); }
+
+function showFloatingScore(amount){
+  const boardArea = document.getElementById("boardArea");
+  const f = document.createElement("div");
+  f.className = "float-text";
+  f.textContent = "+"+amount;
+  f.style.left = "50%";
+  f.style.top = "44%";
+  f.style.fontSize = "27px";
+  f.style.color = "var(--c-reward)";
+  f.style.transform = "translateX(-50%)";
+  boardArea.appendChild(f);
+  setTimeout(()=>f.remove(), 1050);
+}
+
+// コンボが伸びるほど文字の光量・サイズ・跳ね幅を増やす
+function showComboBanner(count){
+  const el = document.getElementById("comboBanner");
+  const isStr = typeof count === "string";
+  el.textContent = isStr ? count : (count+" COMBO!");
+  const growth = isStr ? 1 : Math.min(1 + (count-2)*0.12, 1.8);
+  el.style.fontSize = (40*growth)+"px";
+  el.style.textShadow = `0 0 ${14*growth}px rgba(255,209,102,${Math.min(1,0.6+growth*0.2)}), 0 4px 12px rgba(0,0,0,0.6)`;
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.classList.add("show");
+}
+
+function screenShake(big){
+  const area = document.getElementById("boardArea");
+  area.classList.remove("shake","shake-big");
+  void area.offsetWidth;
+  area.classList.add(big ? "shake-big" : "shake");
+}
+
+function screenFlash(isSpecial, big, specialSide){
+  const el = document.getElementById("flashOverlay");
+  el.classList.remove("go","big","special-self","special-cpu");
+  void el.offsetWidth;
+  if(isSpecial){
+    el.classList.add("go","big", specialSide==="cpu" ? "special-cpu" : "special-self");
+  } else {
+    el.classList.add("go");
+    if(big) el.classList.add("big");
+  }
+}
+
+function playPlaceFeedback(row,col,piece){
+  for(const [dr,dc] of piece.cells){
+    const idx = (row+dr)*GRID_SIZE+(col+dc);
+    const el = mainCells[idx];
+    if(!el) continue;
+    el.style.transform = "scale(0.82)";
+    el.classList.add("ripple");
+    setTimeout(()=>{ if(el){ el.style.transform="scale(1.1)"; } }, 70);
+    setTimeout(()=>{ if(el){ el.style.transform=""; el.classList.remove("ripple"); } }, 220);
+  }
+}
+
+/* =========================================================
+   UNDO / SHUFFLE / SPECIAL ボタン
+   ========================================================= */
+document.getElementById("btnUndo").addEventListener("click", ()=>{
+  if(game.undoUsed || game.history.length===0) return;
+  const snap = game.history.pop();
+  game.board = snap.board;
+  game.score = snap.score;
+  game.special = snap.special;
+  game.pieces = snap.pieces;
+  game.undoUsed = true;
+  renderBoard();
+  renderPieceTray();
+  updateHud();
+  toast("1手戻しました");
+});
+
+document.getElementById("btnShuffle").addEventListener("click", ()=>{
+  if(game.gameOver) return;
+  game.pieces = [randomPiece(), randomPiece(), randomPiece()];
+  renderPieceTray();
+  toast("ピースをシャッフルしました");
+  checkGameOver();
+});
+
+document.getElementById("btnSpecial").addEventListener("click", ()=>{
+  if(game.special<100) return;
+  activateSpecial();
+});
+
+function fireBurstRing(){
+  const ring = document.getElementById("burstRing");
+  ring.classList.remove("go");
+  void ring.offsetWidth;
+  ring.classList.add("go");
+}
+
+function activateSpecial(){
+  game.special = 0;
+  game.specialUsedCount += 1;
+  SAVE.stats.specialUsed += 1;
+  progressDaily("special", 1);
+
+  const filledCoords = [];
+  for(let r=0;r<GRID_SIZE;r++) for(let c=0;c<GRID_SIZE;c++) if(game.board[r][c]) filledCoords.push([r,c]);
+
+  let removeCount = Math.min(filledCoords.length, 10 + (game.character.attr==="bomb"?6:0));
+  filledCoords.sort(()=>Math.random()-0.5);
+  for(let i=0;i<removeCount;i++){
+    const [r,c] = filledCoords[i];
+    game.board[r][c] = null;
+  }
+
+  // 発動前点滅は既にゲージのreadyパルスで表現済み。発動時は大きな発光リング+震え+色切替
+  fireBurstRing();
+  screenFlash(true, true, "self");
+  screenShake(true);
+  spawnParticles(20, true);
+  showComboBanner("✨ SPECIAL!");
+
+  if(game.versusCpu){
+    sendGarbageToGhost();
+  }
+
+  renderBoard();
+  updateHud();
+  writeSave();
+  checkGameOver();
+}
+
+/* =========================================================
+   対戦 (ゴーストCPU)
+   ========================================================= */
+function sendGarbageToGhost(){
+  if(!game.ghostBoard) return;
+  let count = 3 + (game.character.attr==="sniper"?2:0);
+  let added = 0, tries=0;
+  while(added<count && tries<60){
+    tries++;
+    const r = Math.floor(Math.random()*GRID_SIZE);
+    const c = Math.floor(Math.random()*GRID_SIZE);
+    if(!game.ghostBoard[r][c]){
+      game.ghostBoard[r][c] = "#5a3030";
+      added++;
     }
   }
-  octx.globalAlpha=1;
-  const a=document.createElement("a");
-  a.href=off.toDataURL("image/png");
-  a.download=filename;
-  a.click();
+  renderBoard();
+  if(!anyPlacementPossible(game.ghostBoard, [{cells:[[0,0]]}])){
+    endGame(true);
+  }
 }
-function exportFrames(){
-  ui.project.frames.forEach((f,i)=>setTimeout(()=>exportPNG(f,`${ui.project.name||"weapon"}_frame${i+1}.png`),i*120));
+
+function sendGarbageToPlayer(cpu){
+  let count = 2 + Math.round(cpu.specialChance*3);
+  let added = 0, tries=0;
+  while(added<count && tries<60){
+    tries++;
+    const r = Math.floor(Math.random()*GRID_SIZE);
+    const c = Math.floor(Math.random()*GRID_SIZE);
+    if(!game.board[r][c]){
+      game.board[r][c] = "#5a3030";
+      added++;
+    }
+  }
+  renderBoard();
+  // CPU側SPECIAL: 赤系の警告フラッシュ+震えで「攻撃された」感を出す
+  screenFlash(true, true, "cpu");
+  screenShake(false);
+  toast("⚠ CPUから妨害ブロックが届いた！");
+  checkGameOver();
 }
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(ui.project,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${ui.project.name||"weapon"}.json`;
-  a.click();
+
+function startCpuLoop(){
+  const cpu = game.versusCpu;
+  function tick(){
+    if(game.gameOver) return;
+    cpuTakeTurn(cpu);
+    game.cpuTimer = setTimeout(tick, cpu.speed + Math.random()*400);
+  }
+  game.cpuTimer = setTimeout(tick, cpu.speed);
 }
-function exportSpriteSheet(){
-  const cols = ui.project.frames.length;
-  const off=document.createElement("canvas");
-  off.width=SIZE*16*cols; off.height=SIZE*16;
-  const octx=off.getContext("2d");
-  octx.imageSmoothingEnabled=false;
-  ui.project.frames.forEach((f,i)=>{
-    octx.save(); octx.translate(i*SIZE*16,0);
-    for(const layer of f.layers){
-      if(!layer.visible) continue;
-      octx.globalAlpha=layer.opacity;
-      for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-        const c=layer.pixels[idx(x,y)];
-        if(c){ octx.fillStyle=c; octx.fillRect(x*16,y*16,16,16); }
+
+function cpuTakeTurn(cpu){
+  if(!game.ghostBoard) return;
+  const piece = randomPiece();
+  let placed = false;
+  let attempts = [];
+  for(let r=0;r<GRID_SIZE && !placed;r++){
+    for(let c=0;c<GRID_SIZE && !placed;c++){
+      if(canPlace(game.ghostBoard, piece, r, c)){
+        attempts.push([r,c]);
       }
     }
-    octx.restore();
-  });
-  const a=document.createElement("a");
-  a.href=off.toDataURL("image/png");
-  a.download=`${ui.project.name||"weapon"}_sheet.png`;
-  a.click();
-}
-
-function addFrame(){ ui.project.frames.push(makeFrame(`Frame ${ui.project.frames.length+1}`)); ui.currentFrame=ui.project.frames.length-1; ui.currentLayer=0; renderAll(); saveProject(); }
-function dupFrame(){ const f=clone(currentFrame()); f.id=crypto.randomUUID(); f.name += " copy"; ui.project.frames.splice(ui.currentFrame+1,0,f); ui.currentFrame++; ui.currentLayer=0; renderAll(); saveProject(); }
-function delFrame(){ if(ui.project.frames.length<=1) return; ui.project.frames.splice(ui.currentFrame,1); ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); saveProject(); }
-function addLayer(){ currentFrame().layers.push(makeLayer(`Layer ${currentFrame().layers.length+1}`)); ui.currentLayer=currentFrame().layers.length-1; renderAll(); saveProject(); }
-function dupLayer(){ const l=clone(currentLayer()); l.id=crypto.randomUUID(); l.name += " copy"; currentFrame().layers.splice(ui.currentLayer+1,0,l); ui.currentLayer++; renderAll(); saveProject(); }
-function delLayer(){ if(currentFrame().layers.length<=1) return; currentFrame().layers.splice(ui.currentLayer,1); ui.currentLayer=Math.max(0,ui.currentLayer-1); renderAll(); saveProject(); }
-function moveLayer(dir){
-  const arr=currentFrame().layers, i=ui.currentLayer, j=i+dir;
-  if(j<0||j>=arr.length) return;
-  [arr[i],arr[j]]=[arr[j],arr[i]];
-  ui.currentLayer=j;
-  renderAll(); saveProject();
-}
-function mergeLayer(){
-  const arr=currentFrame().layers;
-  if(arr.length<=1) return;
-  const i=ui.currentLayer, base=arr[Math.max(0,i-1)], top=arr[i];
-  for(let p=0;p<top.pixels.length;p++) if(top.pixels[p]) base.pixels[p]=top.pixels[p];
-  arr.splice(i,1);
-  ui.currentLayer=Math.max(0,i-1);
-  renderAll(); saveProject();
-}
-function resizeProject(newSize){
-  const oldSize = SIZE;
-  const scale = newSize / oldSize;
-  ui.project.frames.forEach(f=>{
-    f.layers.forEach(l=>{
-      const old = l.pixels.slice();
-      l.pixels = Array.from({length:newSize*newSize},()=>null);
-      for(let y=0;y<newSize;y++) for(let x=0;x<newSize;x++){
-        const ox = Math.floor(x/scale), oy = Math.floor(y/scale);
-        if(ox<oldSize && oy<oldSize) l.pixels[y*newSize+x] = old[oy*oldSize+ox];
-      }
-    });
-  });
-  ui.project.size = newSize;
-  setCanvasSize(newSize);
-  renderAll(); saveProject();
-}
-function applySelectionMove(dx,dy){
-  if(!ui.selection) return;
-  const frame=currentFrame();
-  for(const layer of frame.layers){
-    const copy = layer.pixels.slice();
-    for(const [x,y] of ui.selection) if(copy[idx(x,y)]){
-      const nx=x+dx, ny=y+dy;
-      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = copy[idx(x,y)];
-      layer.pixels[idx(x,y)] = null;
+  }
+  if(attempts.length){
+    const [r,c] = attempts[Math.floor(Math.random()*attempts.length)];
+    placePiece(game.ghostBoard, piece, r, c);
+    const {rows, cols} = findClearedLines(game.ghostBoard);
+    if(rows.length || cols.length){
+      clearLines(game.ghostBoard, rows, cols);
+      game.ghostScore += (rows.length+cols.length) * 50;
     }
-  }
-  ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
-  renderAll();
-}
-function randomSelectionFromRect(x0,y0,x1,y1){
-  const pts=[];
-  const minx=Math.max(0,Math.min(x0,x1)), maxx=Math.min(SIZE-1,Math.max(x0,x1));
-  const miny=Math.max(0,Math.min(y0,y1)), maxy=Math.min(SIZE-1,Math.max(y0,y1));
-  for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
-  return pts;
-}
-function shapeFromDrag(type,x0,y0,x1,y1){
-  const pts=[];
-  const minx=Math.min(x0,x1), maxx=Math.max(x0,x1), miny=Math.min(y0,y1), maxy=Math.max(y0,y1);
-  if(type==="stampRect"){
-    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
-  }else if(type==="stampCircle"){
-    const cx=(minx+maxx)/2, cy=(miny+maxy)/2, rx=(maxx-minx)/2, ry=(maxy-miny)/2;
-    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){
-      const dx=(x-cx)/(rx||1), dy=(y-cy)/(ry||1);
-      if(dx*dx+dy*dy<=1) pts.push([x,y]);
-    }
-  }else if(type==="stampLine"){
-    let x=x0, y=y0, dx=Math.abs(x1-x0), sx=x0<x1?1:-1, dy=-Math.abs(y1-y0), sy=y0<y1?1:-1, err=dx+dy;
-    while(true){
-      pts.push([x,y]);
-      if(x===x1 && y===y1) break;
-      const e2=2*err;
-      if(e2>=dy){ err+=dy; x+=sx; }
-      if(e2<=dx){ err+=dx; y+=sy; }
-    }
-  }
-  return pts;
-}
-
-function clearSelectionSelectionOnly(){
-  if(!ui.selection) return;
-  const frame=currentFrame();
-  for(const layer of frame.layers) for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
-}
-function pasteSelection(dx,dy){
-  if(!ui.selectionBuffer) return;
-  const frame=currentFrame();
-  for(const layer of frame.layers){
-    for(const [x,y,c] of ui.selectionBuffer){
-      const nx=x+dx, ny=y+dy;
-      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = c;
-    }
-  }
-  renderAll();
-}
-
-function startSelectionLasso(x,y){
-  ui.selection = [[x,y]];
-  ui.selectionMode = "lasso";
-  ui.selectionAnchor = {x,y};
-}
-function finishSelectionLasso(){
-  if(!ui.selection || ui.selection.length < 3) { ui.selection = null; ui.selectionMode = null; return; }
-  const pts = ui.selection.slice();
-  ui.selection = pts;
-  ui.selectionMode = null;
-  ui.selectionBuffer = null;
-  syncUI(); renderAll();
-}
-function captureSelectionBuffer(){
-  if(!ui.selection) return null;
-  const set = new Set(ui.selection.map(([x,y])=>`${x},${y}`));
-  const buf=[];
-  const frame=currentFrame();
-  for(const layer of frame.layers){
-    for(const [x,y] of ui.selection){
-      const c = layer.pixels[idx(x,y)];
-      if(c) buf.push([x,y,c]);
-    }
-  }
-  return buf;
-}
-
-let drawing=false, dragStart=null, dragEnd=null, pointerMode=null;
-view.addEventListener("contextmenu", e=>e.preventDefault());
-view.addEventListener("pointerdown", e=>{
-  const c = cellFromEvent(e); if(!c) return;
-  drawing = true;
-  dragStart = c;
-  dragEnd = c;
-  if(ui.tool==="lasso"){
-    if(!ui.selection) startSelectionLasso(c.x,c.y);
-    else if(ui.selectionMode==="move") ui.selectionAnchor = {x:c.x,y:c.y};
-  }else if(ui.selection && ui.tool==="pen"){
-    pointerMode="selectionDraw";
-    paintAt(c.x,c.y);
-  }else if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
-    pointerMode="stamp";
-  }else{
-    pointerMode="paint";
-    paintAt(c.x,c.y);
-  }
-});
-view.addEventListener("pointermove", e=>{
-  const c = cellFromEvent(e);
-  document.getElementById("coordBadge").textContent = c ? `x:${c.x} y:${c.y}` : `x:- y:-`;
-  if(!drawing || !c) return;
-  dragEnd = c;
-  if(pointerMode==="paint" || pointerMode==="selectionDraw") paintAt(c.x,c.y);
-  if(ui.tool==="lasso" && ui.selectionMode==="lasso"){
-    ui.selection = ui.selection.concat([[c.x,c.y]]);
-    renderCanvas();
-  }
-  if(ui.selectionMode==="move" && ui.selectionAnchor){
-    renderAll();
-  }
-});
-addEventListener("pointerup", ()=>{
-  if(!drawing) return;
-  const end = dragEnd || dragStart;
-  if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
-    const pts = shapeFromDrag(ui.tool, dragStart.x, dragStart.y, end.x, end.y);
-    const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
-    pts.forEach(([x,y])=>{
-      if(!inBounds(x,y)) return;
-      setPixel(currentLayer(),x,y,color);
-      if(ui.mirrorX) setPixel(currentLayer(),SIZE-1-x,y,color);
-      if(ui.mirrorY) setPixel(currentLayer(),x,SIZE-1-y,color);
-    });
-    renderAll();
-  }
-  if(ui.tool==="lasso" && ui.selectionMode==="lasso") finishSelectionLasso();
-  drawing=false; pointerMode=null; dragStart=null; dragEnd=null;
-});
-
-document.querySelectorAll("[data-tab]").forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  ui.tab=btn.dataset.tab;
-  document.getElementById("historyPanel").classList.toggle("hidden", ui.tab!=="history");
-  document.getElementById("animatePanel").classList.toggle("hidden", ui.tab!=="animate");
-  document.getElementById("templatePanel").classList.toggle("hidden", ui.tab!=="template");
-  document.getElementById("exportPanel").classList.toggle("hidden", ui.tab!=="export");
-});
-document.querySelectorAll("[data-tool]").forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll("[data-tool]").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  ui.tool=btn.dataset.tool;
-  syncUI();
-});
-
-document.getElementById("nameInput").oninput = e=>ui.project.name=e.target.value;
-document.getElementById("attrInput").oninput = e=>ui.project.attribute=e.target.value;
-document.getElementById("rarityInput").oninput = e=>ui.project.rarity=e.target.value;
-document.getElementById("sizeInput").value = String(SIZE);
-document.getElementById("brushInput").oninput = e=>ui.brush = Math.max(1,Math.min(16,+e.target.value||1));
-document.getElementById("opacityInput").oninput = e=>ui.opacity = Math.max(0,Math.min(1,+(e.target.value||1)));
-document.getElementById("animSpeedInput").oninput = e=>{ ui.animSpeed = Math.max(20,Math.min(3000,+e.target.value||120)); currentFrame().duration = ui.animSpeed; };
-document.getElementById("colorInput").oninput = e=>ui.color=e.target.value;
-document.getElementById("toleranceInput").oninput = e=>ui.tolerance = +e.target.value || 0;
-
-document.getElementById("randomNameBtn").onclick = ()=>{ ui.project.name=randomWeaponName(); document.getElementById("nameInput").value=ui.project.name; };
-document.getElementById("saveProjectBtn").onclick = ()=>saveProject(true);
-document.getElementById("newProjectBtn").onclick = ()=>{
-  ui.project=makeProject();
-  ui.currentFrame=0; ui.currentLayer=0; ui.selection=null;
-  projects.unshift(ui.project); saveProjects(); renderAll(); setStatus("新規作成");
-};
-document.getElementById("applySizeBtn").onclick = ()=>resizeProject(+document.getElementById("sizeInput").value);
-document.getElementById("addColorBtn").onclick = ()=>{ if(!ui.palette.includes(ui.color)) ui.palette.unshift(ui.color); renderAll(); };
-document.getElementById("clearPaletteBtn").onclick = ()=>{ ui.palette=["#9ee8ff","#ffffff","#0f172a","#f59e0b","#ef4444","#22c55e","#8b5cf6"]; renderAll(); };
-
-document.getElementById("gridBtn").onclick = ()=>{ ui.grid=!ui.grid; document.getElementById("gridBtn").classList.toggle("active",ui.grid); };
-document.getElementById("mirrorXBtn").onclick = ()=>{ ui.mirrorX=!ui.mirrorX; document.getElementById("mirrorXBtn").classList.toggle("active",ui.mirrorX); };
-document.getElementById("mirrorYBtn").onclick = ()=>{ ui.mirrorY=!ui.mirrorY; document.getElementById("mirrorYBtn").classList.toggle("active",ui.mirrorY); };
-document.getElementById("onionBtn").onclick = ()=>{ ui.onion=!ui.onion; document.getElementById("onionBtn").classList.toggle("active",ui.onion); };
-document.getElementById("alphaLockBtn").onclick = ()=>{ ui.alphaLock=!ui.alphaLock; document.getElementById("alphaLockBtn").classList.toggle("active",ui.alphaLock); };
-document.getElementById("importBtn").onclick = ()=>document.getElementById("imageInput").click();
-document.getElementById("imageInput").onchange = e=>{ if(e.target.files[0]) importImage(e.target.files[0]); };
-
-document.getElementById("loadBtn").onclick = ()=>loadProjectById(ui.selectedHistoryId || ui.project.id);
-document.getElementById("deleteBtn").onclick = ()=>{
-  if(projects.length<=1) return;
-  const id=ui.selectedHistoryId || ui.project.id;
-  projects = projects.filter(p=>p.id!==id);
-  saveProjects();
-  ui.project = projects[0]; ui.currentFrame=0; ui.currentLayer=0; ui.selectedHistoryId = ui.project.id;
-  setCanvasSize(ui.project.size || 32); renderAll();
-};
-document.getElementById("saveTemplateBtn").onclick = ()=>{
-  const list = JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
-  const t = {id:crypto.randomUUID(), name:ui.project.name+" template", attribute:ui.project.attribute, rarity:ui.project.rarity, size:SIZE, frames:clone(ui.project.frames)};
-  list.unshift(t);
-  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(list));
-  renderTemplateList();
-  setStatus("テンプレ保存");
-};
-
-document.getElementById("pngBtn").onclick = ()=>exportPNG(null, `${ui.project.name||"weapon"}.png`);
-document.getElementById("jsonBtn").onclick = ()=>exportJSON();
-document.getElementById("framesBtn").onclick = ()=>exportFrames();
-document.getElementById("sheetBtn").onclick = ()=>exportSpriteSheet();
-
-document.getElementById("addFrameBtn").onclick = ()=>addFrame();
-document.getElementById("dupFrameBtn").onclick = ()=>dupFrame();
-document.getElementById("delFrameBtn").onclick = ()=>delFrame();
-document.getElementById("prevFrameBtn").onclick = ()=>{ ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); };
-document.getElementById("nextFrameBtn").onclick = ()=>{ ui.currentFrame=Math.min(ui.project.frames.length-1,ui.currentFrame+1); ui.currentLayer=0; renderAll(); };
-
-document.getElementById("addLayerBtn").onclick = ()=>addLayer();
-document.getElementById("dupLayerBtn").onclick = ()=>dupLayer();
-document.getElementById("delLayerBtn").onclick = ()=>delLayer();
-document.getElementById("upLayerBtn").onclick = ()=>moveLayer(-1);
-document.getElementById("downLayerBtn").onclick = ()=>moveLayer(1);
-document.getElementById("mergeLayerBtn").onclick = ()=>mergeLayer();
-
-document.getElementById("playBtn").onclick = ()=>{ ui.playing=true; setStatus("再生中"); };
-document.getElementById("stopBtn").onclick = ()=>{ ui.playing=false; setStatus("停止"); };
-
-document.getElementById("selClearBtn").onclick = ()=>clearSelection();
-document.getElementById("selDelBtn").onclick = ()=>{ clearSelectionSelectionOnly(); clearSelection(); saveProject(); };
-document.getElementById("selDupBtn").onclick = ()=>{ ui.selectionBuffer = captureSelectionBuffer(); ui.selectionMode="copy"; setStatus("選択複製モード"); };
-document.getElementById("selMoveBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="move"; ui.selectionBuffer = captureSelectionBuffer(); setStatus("選択移動モード"); } };
-
-function randomName(){
-  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
-  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
-  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
-}
-document.getElementById("randomNameBtn").onclick = ()=>{ ui.project.name=randomName(); document.getElementById("nameInput").value=ui.project.name; };
-
-function syncUI(){
-  document.getElementById("projectBadge").textContent = `${ui.project.name} / ${ui.project.attribute} / ${ui.project.rarity}`;
-  document.getElementById("frameBadge").textContent = `Frame ${ui.currentFrame+1} / ${ui.project.frames.length}`;
-  document.getElementById("layerBadge").textContent = `Layer ${ui.currentLayer+1} / ${currentFrame().layers.length}`;
-  document.getElementById("toolBadge").textContent = ui.tool;
-  document.getElementById("nameInput").value = ui.project.name;
-  document.getElementById("attrInput").value = ui.project.attribute;
-  document.getElementById("rarityInput").value = ui.project.rarity;
-  document.getElementById("sizeInput").value = String(SIZE);
-  document.getElementById("brushInput").value = String(ui.brush);
-  document.getElementById("opacityInput").value = String(ui.opacity);
-  document.getElementById("animSpeedInput").value = String(ui.animSpeed);
-  document.getElementById("selBadge").textContent = ui.selection ? `Selection: ${ui.selection.length}` : "Selection: off";
-  document.getElementById("sizeBadge").textContent = `${SIZE}×${SIZE}`;
-}
-function renderAll(){
-  syncUI();
-  renderPalette();
-  renderLayerList();
-  renderFrameList();
-  renderHistory();
-  renderTemplateList();
-  renderCanvas();
-}
-
-let selectionDrawStart = null;
-view.addEventListener("pointerdown", e=>{
-  const c = cellFromEvent(e); if(!c) return;
-  if(ui.tool==="lasso"){
-    if(!ui.selection || ui.selectionMode!=="lasso"){
-      ui.selection = [[c.x,c.y]];
-      ui.selectionMode = "lasso";
-      selectionDrawStart = c;
-      renderCanvas();
-    }
+    placed = true;
+  } else {
+    endGame(true);
     return;
   }
-  if(ui.selection && ui.selectionMode==="move"){
-    ui.selectionAnchor = {x:c.x,y:c.y};
-    return;
+
+  if(Math.random() < cpu.specialChance*0.3){
+    sendGarbageToPlayer(cpu);
   }
-  if(ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine"){
-    dragStart = c; drawing = true; return;
+
+  renderBoard();
+  updateHud();
+}
+
+/* =========================================================
+   ゲーム開始 / 終了
+   ========================================================= */
+function startGame(versusCpu){
+  game = createGame(versusCpu);
+  hudScorePrev = 0; hudBestPrev = SAVE.bestScore;
+  mainCells = buildGridDom(mainGridEl, GRID_SIZE);
+  if(versusCpu){
+    ghostCells = buildGridDom(ghostGridEl, GRID_SIZE);
+    document.getElementById("ghostWrap").classList.add("show");
+  } else {
+    document.getElementById("ghostWrap").classList.remove("show");
   }
-  drawing = true;
-  paintAt(c.x,c.y);
+  refillPieces();
+  renderBoard();
+  updateHud();
+  showScreen("play");
+
+  if(versusCpu){
+    startCpuLoop();
+  }
+}
+
+document.getElementById("btnPlayClose").addEventListener("click", ()=>{
+  if(game && !game.gameOver){
+    if(confirm("プレイを中断してホームに戻りますか？")){
+      finishCleanup();
+      showScreen("home");
+    }
+  } else {
+    showScreen("home");
+  }
 });
-view.addEventListener("pointermove", e=>{
-  const c = cellFromEvent(e);
-  document.getElementById("coordBadge").textContent = c ? `x:${c.x} y:${c.y}` : `x:- y:-`;
-  if(!c) return;
-  if(ui.tool==="lasso" && ui.selectionMode==="lasso" && drawing){
-    ui.selection.push([c.x,c.y]);
-    renderCanvas();
-    return;
+
+function finishCleanup(){
+  if(game && game.cpuTimer) clearTimeout(game.cpuTimer);
+}
+
+function endGame(won){
+  if(game.gameOver) return;
+  game.gameOver = true;
+  finishCleanup();
+
+  let isNewBest = game.score > SAVE.bestScore;
+  if(isNewBest) SAVE.bestScore = game.score;
+
+  SAVE.stats.bestCombo = Math.max(SAVE.stats.bestCombo, game.maxCombo);
+  SAVE.stats.totalLinesCleared += game.linesThisGame;
+
+  let coinReward = Math.round(game.score/40) + (won?40:0);
+  SAVE.coins += coinReward;
+
+  progressDaily("score", game.score);
+  progressDaily("combo", game.maxCombo);
+  if(game.versusCpu && won){
+    SAVE.stats.cpuWins += 1;
+    progressDaily("win", 1);
   }
-  if(ui.selectionMode==="move" && ui.selectionAnchor && drawing){
-    const dx = c.x - ui.selectionAnchor.x;
-    const dy = c.y - ui.selectionAnchor.y;
-    ui.selectionAnchor = {x:c.x,y:c.y};
-    pasteSelection(dx,dy);
-    ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
-    renderCanvas();
-    return;
+
+  writeSave();
+
+  const banner = document.getElementById("resultBanner");
+  banner.classList.remove("appear");
+  if(game.versusCpu){
+    banner.textContent = won ? "🏆 VICTORY!" : "💀 DEFEAT...";
+    banner.className = "result-banner " + (won?"win":"lose");
+  } else {
+    banner.textContent = "GAME OVER";
+    banner.className = "result-banner lose";
   }
-  if(!drawing) return;
-  if(ui.tool==="pen" || ui.tool==="erase" || ui.tool==="eraseColor" || ui.tool==="fill" || ui.tool==="pick") paintAt(c.x,c.y);
-});
-addEventListener("pointerup", ()=>{
-  if(ui.tool==="lasso" && ui.selectionMode==="lasso"){
-    ui.selectionMode = null;
-    ui.selectionBuffer = captureSelectionBuffer();
-    syncUI(); renderCanvas(); setStatus("選択完了");
-  }
-  if(drawing && (ui.tool==="stampRect" || ui.tool==="stampCircle" || ui.tool==="stampLine") && dragStart){
-    const end = dragEnd || dragStart;
-    const pts = shapeFromDrag(ui.tool, dragStart.x, dragStart.y, end.x, end.y);
-    const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
-    pts.forEach(([x,y])=>{
-      if(!inBounds(x,y)) return;
-      setPixel(currentLayer(),x,y,color);
-      if(ui.mirrorX) setPixel(currentLayer(),SIZE-1-x,y,color);
-      if(ui.mirrorY) setPixel(currentLayer(),x,SIZE-1-y,color);
+
+  const newbestEl = document.getElementById("resultNewbest");
+  newbestEl.style.display = isNewBest ? "block":"none";
+  newbestEl.classList.remove("appear");
+
+  document.getElementById("resultScore").textContent = "0";
+  document.getElementById("resultCombo").textContent = "0";
+  document.getElementById("resultSpecial").textContent = "0";
+  document.getElementById("resultCoin").textContent = "+0";
+
+  const rows = Array.from(document.querySelectorAll("#resultStats .result-row"));
+  rows.forEach(r=> r.classList.remove("appear","newbest"));
+
+  setTimeout(()=>{
+    showScreen("result");
+    // ===== 結果画面: バナー→各数値を順番に表示し、達成感を積み上げる =====
+    setTimeout(()=> banner.classList.add("appear"), 60);
+    const finalVals = { score: game.score, combo: game.maxCombo, special: game.specialUsedCount, coin: coinReward };
+    const order = ["score","combo","special","coin"];
+    order.forEach((key, i)=>{
+      setTimeout(()=>{
+        const row = rows.find(r=>r.dataset.key===key);
+        row.classList.add("appear");
+        const target = key==="coin" ? document.getElementById("resultCoin") : document.getElementById("result"+key.charAt(0).toUpperCase()+key.slice(1));
+        if(key==="coin"){
+          animateCount({ set textContent(v){ target.textContent = "+"+v; }, get textContent(){return 0;} }, 0, finalVals.coin, 500);
+        } else {
+          animateCount(target, 0, finalVals[key], 500);
+        }
+        if(key==="score" && isNewBest){
+          row.classList.add("newbest");
+        }
+      }, 380 + i*260);
     });
-    renderAll();
-  }
-  drawing=false; dragStart=null; dragEnd=null;
-});
-view.addEventListener("contextmenu", e=>e.preventDefault());
-
-function paintAt(x,y){
-  const layer = currentLayer();
-  const color = `rgba(${hexToRgba(ui.color).r},${hexToRgba(ui.color).g},${hexToRgba(ui.color).b},${ui.opacity})`;
-  const cells=[];
-  const half = Math.floor(ui.brush/2);
-  for(let yy=-half; yy<=half; yy++) for(let xx=-half; xx<=half; xx++) cells.push([x+xx,y+yy]);
-  cells.forEach(([cx,cy])=>{
-    if(!inBounds(cx,cy)) return;
-    if(ui.tool!=="pick" && ui.selection && ui.selectionMode!=="move" && !selectionContains(cx,cy) && ui.tool!=="lasso") return;
-    if(ui.tool==="pen"){
-      if(ui.alphaLock && !getPixel(layer,cx,cy)) return;
-      setPixel(layer,cx,cy,color);
-    }else if(ui.tool==="erase"){
-      clearPixel(layer,cx,cy);
-    }else if(ui.tool==="eraseColor"){
-      const c=getPixel(layer,cx,cy); if(c) eraseSameColor(layer,c,ui.tolerance);
-    }else if(ui.tool==="fill"){
-      const target=getPixel(layer,cx,cy); floodFill(layer,cx,cy,target,color);
-    }else if(ui.tool==="pick"){
-      const c=getPixel(layer,cx,cy); if(c){ ui.color=c; document.getElementById("colorInput").value=c; }
+    if(isNewBest){
+      setTimeout(()=>{
+        newbestEl.classList.add("appear");
+        spawnConfetti(30);
+      }, 380 + order.length*260 + 100);
     }
-    if(ui.mirrorX) setPixel(layer,SIZE-1-cx,cy,color);
-    if(ui.mirrorY) setPixel(layer,cx,SIZE-1-cy,color);
-  });
-  renderAll();
+  }, 380);
 }
 
-function shapeFromDrag(type,x0,y0,x1,y1){
-  const pts=[];
-  const minx=Math.min(x0,x1), maxx=Math.max(x0,x1), miny=Math.min(y0,y1), maxy=Math.max(y0,y1);
-  if(type==="stampRect"){
-    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++) pts.push([x,y]);
-  }else if(type==="stampCircle"){
-    const cx=(minx+maxx)/2, cy=(miny+maxy)/2, rx=(maxx-minx)/2, ry=(maxy-miny)/2;
-    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){
-      const dx=(x-cx)/(rx||1), dy=(y-cy)/(ry||1);
-      if(dx*dx+dy*dy<=1) pts.push([x,y]);
-    }
-  }else if(type==="stampLine"){
-    let x=x0,y=y0,dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy;
-    while(true){
-      pts.push([x,y]);
-      if(x===x1 && y===y1) break;
-      const e2=2*err;
-      if(e2>=dy){ err+=dy; x+=sx; }
-      if(e2<=dx){ err+=dx; y+=sy; }
-    }
-  }
-  return pts;
-}
-
-function captureSelectionBuffer(){
-  if(!ui.selection) return null;
-  const buf=[];
-  const frame=currentFrame();
-  for(const layer of frame.layers){
-    for(const [x,y] of ui.selection){
-      const c = layer.pixels[idx(x,y)];
-      if(c) buf.push([x,y,c]);
-    }
-  }
-  return buf;
-}
-function clearSelectionSelectionOnly(){
-  if(!ui.selection) return;
-  for(const layer of currentFrame().layers) for(const [x,y] of ui.selection) layer.pixels[idx(x,y)] = null;
-}
-function clearSelection(){ ui.selection=null; ui.selectionBuffer=null; ui.selectionMode=null; ui.selectionAnchor=null; renderAll(); }
-
-function pasteSelectionByBuffer(dx,dy,buffer){
-  if(!buffer) return;
-  const frame=currentFrame();
-  for(const layer of frame.layers){
-    for(const [x,y,c] of buffer){
-      const nx=x+dx, ny=y+dy;
-      if(inBounds(nx,ny)) layer.pixels[idx(nx,ny)] = c;
-    }
-  }
-}
-
-function resizeSelectionBox(x,y){}
-
-function captureSelectionMove(dx,dy){
-  if(!ui.selection || !ui.selectionBuffer) return;
-  pasteSelectionByBuffer(dx,dy,ui.selectionBuffer);
-  ui.selection = ui.selection.map(([x,y])=>[x+dx,y+dy]).filter(([x,y])=>inBounds(x,y));
-}
-document.getElementById("selMoveBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="move"; ui.selectionBuffer=captureSelectionBuffer(); setStatus("選択移動中"); } };
-document.getElementById("selDupBtn").onclick = ()=>{ if(ui.selection){ ui.selectionMode="copy"; ui.selectionBuffer=captureSelectionBuffer(); setStatus("選択複製中"); } };
-document.getElementById("selDelBtn").onclick = ()=>{ clearSelectionSelectionOnly(); clearSelection(); saveProject(); };
-
-function applyTemplate(t){
-  ui.project.frames = clone(t.frames);
-  ui.project.size = t.size || SIZE;
-  ui.currentFrame=0; ui.currentLayer=0; ui.selection=null;
-  setCanvasSize(ui.project.size);
-  renderAll(); saveProject(); setStatus("テンプレを適用しました");
-}
-function randomWeaponNameWithData(){
-  const a=["星","影","風","火","霧","月","深","光","雷","潮","白","黒","蒼","紅"];
-  const b=["裂き","穿ち","守り","舞","鳴き","響き","砕き","穿孔","咲き","走り","断ち","砕刀"];
-  return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)];
-}
-document.getElementById("saveTemplateBtn").onclick = ()=>{
-  const list = JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "[]");
-  list.unshift({id:crypto.randomUUID(), name:ui.project.name+" template", attribute:ui.project.attribute, rarity:ui.project.rarity, size:SIZE, frames:clone(ui.project.frames)});
-  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(list));
-  renderTemplateList(); setStatus("テンプレ保存");
-};
-
-function exportSpriteSheetSize(){
-  const off=document.createElement("canvas");
-  off.width=SIZE*16*ui.project.frames.length; off.height=SIZE*16;
-  const octx=off.getContext("2d"); octx.imageSmoothingEnabled=false;
-  ui.project.frames.forEach((f,i)=>{
-    octx.save(); octx.translate(i*SIZE*16,0);
-    drawFrame(f,1,octx);
-    octx.restore();
-  });
-  const a=document.createElement("a");
-  a.href=off.toDataURL("image/png");
-  a.download=`${ui.project.name||"weapon"}_sheet.png`;
-  a.click();
-}
-function loadSelectionOnMove(dx,dy){
-  if(!ui.selectionBuffer) return;
-  pasteSelectionByBuffer(dx,dy,ui.selectionBuffer);
-}
-
-function tickAnimation(){
-  if(ui.playing && ui.project.frames.length){
-    ui.playTimer += 16;
-    const f = currentFrame();
-    if(ui.playTimer >= (f.duration || ui.animSpeed)){
-      ui.playTimer = 0;
-      ui.currentFrame = (ui.currentFrame + 1) % ui.project.frames.length;
-      ui.currentLayer = 0;
-      renderAll();
-    }
-  }
-  renderCanvas();
-  requestAnimationFrame(tickAnimation);
-}
-
-document.getElementById("playBtn").onclick=()=>{ ui.playing=true; setStatus("再生中"); };
-document.getElementById("stopBtn").onclick=()=>{ ui.playing=false; setStatus("停止"); };
-
-document.getElementById("addFrameBtn").onclick=()=>{ ui.project.frames.push(makeFrame(`Frame ${ui.project.frames.length+1}`)); ui.currentFrame=ui.project.frames.length-1; ui.currentLayer=0; renderAll(); saveProject(); };
-document.getElementById("dupFrameBtn").onclick=()=>{ const f=clone(currentFrame()); f.id=crypto.randomUUID(); f.name += " copy"; ui.project.frames.splice(ui.currentFrame+1,0,f); ui.currentFrame++; ui.currentLayer=0; renderAll(); saveProject(); };
-document.getElementById("delFrameBtn").onclick=()=>{ if(ui.project.frames.length<=1) return; ui.project.frames.splice(ui.currentFrame,1); ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); saveProject(); };
-document.getElementById("prevFrameBtn").onclick=()=>{ ui.currentFrame=Math.max(0,ui.currentFrame-1); ui.currentLayer=0; renderAll(); };
-document.getElementById("nextFrameBtn").onclick=()=>{ ui.currentFrame=Math.min(ui.project.frames.length-1, ui.currentFrame+1); ui.currentLayer=0; renderAll(); };
-
-document.getElementById("addLayerBtn").onclick=()=>{ currentFrame().layers.push(makeLayer(`Layer ${currentFrame().layers.length+1}`)); ui.currentLayer=currentFrame().layers.length-1; renderAll(); saveProject(); };
-document.getElementById("dupLayerBtn").onclick=()=>{ const l=clone(currentLayer()); l.id=crypto.randomUUID(); l.name += " copy"; currentFrame().layers.splice(ui.currentLayer+1,0,l); ui.currentLayer++; renderAll(); saveProject(); };
-document.getElementById("delLayerBtn").onclick=()=>{ if(currentFrame().layers.length<=1) return; currentFrame().layers.splice(ui.currentLayer,1); ui.currentLayer=Math.max(0,ui.currentLayer-1); renderAll(); saveProject(); };
-document.getElementById("upLayerBtn").onclick=()=>moveLayer(-1);
-document.getElementById("downLayerBtn").onclick=()=>moveLayer(1);
-document.getElementById("mergeLayerBtn").onclick=()=>mergeLayer();
-
-document.getElementById("loadBtn").onclick=()=>loadProjectById(ui.selectedHistoryId || ui.project.id);
-document.getElementById("deleteBtn").onclick=()=>{
-  if(projects.length<=1) return;
-  const id=ui.selectedHistoryId || ui.project.id;
-  projects = projects.filter(p=>p.id!==id);
-  saveProjects();
-  ui.project = projects[0]; ui.currentFrame=0; ui.currentLayer=0; ui.selectedHistoryId=ui.project.id;
-  setCanvasSize(ui.project.size || 32); renderAll();
-};
-
-document.getElementById("pngBtn").onclick=()=>exportPNG(null, `${ui.project.name||"weapon"}.png`);
-document.getElementById("jsonBtn").onclick=()=>exportJSON();
-document.getElementById("framesBtn").onclick=()=>exportFrames();
-document.getElementById("sheetBtn").onclick=()=>exportSpriteSheetSize();
-
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(ui.project,null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`${ui.project.name||"weapon"}.json`; a.click();
-}
-function exportFrames(){
-  ui.project.frames.forEach((f,i)=>setTimeout(()=>exportPNG(f, `${ui.project.name||"weapon"}_frame${i+1}.png`), i*120));
-}
-function hexToRgbaColorStr(hex, alpha){
-  const p=hexToRgba(hex);
-  return `rgba(${p.r},${p.g},${p.b},${alpha})`;
-}
-document.getElementById("selBadge").textContent = "Selection: off";
-document.getElementById("animSpeedInput").oninput = e=>{ ui.animSpeed = Math.max(20,Math.min(3000,+e.target.value||120)); currentFrame().duration = ui.animSpeed; };
-
-document.getElementById("sizeInput").onchange = ()=>{};
-document.getElementById("sizeInput").oninput = ()=>{};
-
-document.querySelectorAll("[data-tab]").forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  ui.tab=btn.dataset.tab;
-  document.getElementById("historyPanel").classList.toggle("hidden", ui.tab!=="history");
-  document.getElementById("animatePanel").classList.toggle("hidden", ui.tab!=="animate");
-  document.getElementById("templatePanel").classList.toggle("hidden", ui.tab!=="template");
-  document.getElementById("exportPanel").classList.toggle("hidden", ui.tab!=="export");
+document.getElementById("btnRetry").addEventListener("click", ()=>{
+  startGame(game.versusCpu);
 });
 
-document.getElementById("sizeInput").value = String(SIZE);
-document.getElementById("applySizeBtn").onclick = ()=>resizeProject(+document.getElementById("sizeInput").value);
-
-function resizeProject(newSize){
-  const oldSize=SIZE;
-  const scale=newSize/oldSize;
-  ui.project.frames.forEach(f=>{
-    f.layers.forEach(l=>{
-      const old=l.pixels.slice();
-      l.pixels=Array.from({length:newSize*newSize},()=>null);
-      for(let y=0;y<newSize;y++) for(let x=0;x<newSize;x++){
-        const ox=Math.floor(x/scale), oy=Math.floor(y/scale);
-        if(ox<oldSize && oy<oldSize) l.pixels[y*newSize+x]=old[oy*oldSize+ox];
-      }
-    });
-  });
-  ui.project.size=newSize;
-  setCanvasSize(newSize);
-  renderAll(); saveProject();
+/* =========================================================
+   初期化
+   ========================================================= */
+function init(){
+  ensureDaily();
+  renderHome();
+  showScreen("home");
 }
+init();
 
-function cutSelectionToBuffer(){
-  if(!ui.selection) return null;
-  const buf = captureSelectionBuffer();
-  clearSelectionSelectionOnly();
-  return buf;
-}
-document.getElementById("selDupBtn").onclick=()=>{
-  if(!ui.selection) return;
-  ui.selectionBuffer = captureSelectionBuffer();
-  const [x,y] = ui.selection[0];
-  pasteSelectionByBuffer(1,1,ui.selectionBuffer);
-  renderAll(); saveProject();
-  setStatus("選択複製");
-};
-
-renderAll();
-setStatus("準備完了");
-tickAnimation();
+})();
 </script>
 </body>
 </html>
